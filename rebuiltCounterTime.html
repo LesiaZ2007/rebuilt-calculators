@@ -1,88 +1,34 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FRC 2026 REBUILT – Practice Counter</title>
+  <title>FRC 2026 REBUILT – Field Path Time Mapper</title>
   <style>
-    :root {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0c10; color: #f5f6fa; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .card { background: #141621; border: 1px solid #242845; border-radius: 16px; padding: 14px; margin: 12px 0; }
+    h1 { font-size: 1.15rem; margin: 0 0 6px; }
+    h2 { font-size: 1.0rem; margin: 0 0 10px; }
+    .sub { color: #b8bdd6; margin: 0 0 10px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 999px;
+      border: 1px solid #2b3053; background: #101325;
     }
-
-    body {
-      margin: 0;
-      background: #0b0c10;
+    label { color: #d7dbef; }
+    input, button { font: inherit; }
+    input[type="number"] {
+      width: 110px;
+      background: #0f1220;
+      border: 1px solid #2b3053;
       color: #f5f6fa;
+      border-radius: 12px;
+      padding: 10px 12px;
     }
-
-    .wrap {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .card {
-      background: #141621;
-      border: 1px solid #242845;
-      border-radius: 16px;
-      padding: 16px;
-      margin: 14px 0;
-    }
-
-    h1 {
-      font-size: 1.25rem;
-      margin: 0 0 6px;
-    }
-
-    .sub {
-      color: #b8bdd6;
-      margin: 0 0 14px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr;
-    }
-
-    @media (min-width: 820px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .big {
-      font-size: 2.25rem;
-      font-weight: 750;
-      letter-spacing: 0.5px;
-    }
-
-    .big2 {
-      font-size: 3rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-
-    button,
-    select,
-    input {
-      font: inherit;
-    }
-
-    .break {
-      flex-basis: 100%;
-      height: 0;
-    }
-
     .btn {
       border: 1px solid #2b3053;
       background: #1b1f33;
@@ -90,931 +36,793 @@
       border-radius: 14px;
       padding: 10px 14px;
       cursor: pointer;
-      min-width: 90px;
     }
+    .btn.secondary { background: transparent; }
+    .btn:focus { outline: 3px solid #6ea8ff; outline-offset: 2px; }
+    .btn:active { transform: translateY(1px); }
+    .muted { color: #b8bdd6; }
+    .small { font-size: 0.9rem; }
+    .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
-    .btn:focus {
-      outline: 3px solid #6ea8ff;
-      outline-offset: 2px;
-    }
-
-    .btn:active {
-      transform: translateY(1px);
-    }
-
-    .btn.secondary {
-      background: transparent;
-    }
-
-    .btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .mono {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .muted {
-      color: #b8bdd6;
-    }
-
-    .total {
-      display: grid;
-      gap: 6px;
-    }
-
-    .total .big {
-      line-height: 1.0;
-    }
-
-    .small {
-      font-size: 0.9rem;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid #2b3053;
-      background: #101325;
-    }
-
-    .statusActive {
-      color: #9dffa9;
-      font-weight: 650;
-    }
-
-    .statusInactive {
-      color: #ffb3b3;
-      font-weight: 650;
-    }
-
-    .timerBox {
-      display: grid;
-      gap: 8px;
-    }
-
-    .timerMeta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .divider {
-      height: 1px;
-      background: #242845;
-      margin: 10px 0;
-    }
-
-    /* Export UI */
-    .textInput {
-      min-width: 260px;
+    /* BIG FIELD AREA */
+    .canvasWrap {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #242845;
       background: #0f1220;
-      border: 1px solid #2b3053;
-      color: #f5f6fa;
-      border-radius: 14px;
-      padding: 10px 14px;
+      height: min(78vh, 860px);
+      min-height: 520px;
     }
-
-    /* Breakdown table */
-    .miniTable {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 0.9rem;
-    }
-
-    .miniTable th,
-    .miniTable td {
+    canvas { width: 100%; height: 100%; display: block; }
+    .hint {
+      margin-top: 12px;
+      background: rgba(10,12,18,0.65);
+      border: 1px solid rgba(90,100,150,0.35);
+      border-radius: 12px;
       padding: 8px 10px;
-      border-top: 1px solid #242845;
-      text-align: left;
+      font-size: 0.9rem;
+      color: #dfe3ff;
+      user-select: none;
     }
 
-    .miniTable th {
-      color: #b8bdd6;
-      font-weight: 650;
-    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #242845; padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: #d7dbef; font-weight: 650; }
+    td { color: #f5f6fa; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .kpi { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+    @media (max-width: 900px) { .kpi { grid-template-columns: repeat(2, minmax(140px, 1fr)); } }
+    .kpi .box { border: 1px solid #242845; border-radius: 14px; padding: 10px; background: #101325; }
+    .kpi .big { font-size: 1.5rem; font-weight: 750; }
+    .kpi .lbl { color: #b8bdd6; font-size: 0.9rem; }
 
-    .right {
+    .pointsList input[type="number"] { width: 90px; padding: 8px 10px; border-radius: 10px; }
+
+    input[type="checkbox"] { transform: scale(2); margin: 0; }
+
+    /* Segment speed inputs */
+    .segSpeed {
+      width: 90px;
+      padding: 8px 10px;
+      border-radius: 10px;
       text-align: right;
     }
   </style>
 </head>
-
 <body>
   <main class="wrap">
     <div class="card">
-      <h1>REBUILT (2026) – Driver Practice Counter (Match-Timed)</h1>
-      <p class="sub">AUTO (0:20) → TELEOP (2:20 with shifts). Fuel points only count when your HUB is active.</p>
+      <h1>REBUILT (2026) – Field Path Time Mapper</h1>
+      <p class="sub">
+        Click to place waypoints. Drag to adjust. Shows distance/time per segment.
+        You can set a different robot speed for each segment.
+      </p>
+    </div>
 
-      <!-- TIMER / SETTINGS -->
-      <section class="card" aria-labelledby="timerTitle">
-        <div class="row">
-          <h2 id="timerTitle" style="margin:0;">Match Timer</h2>
-          <div class="controls" aria-label="Timer controls">
-            <button class="btn" id="startPause">Start</button>
-            <button class="btn secondary" id="resetTimer">Reset Timer</button>
-          </div>
+    <!-- SETTINGS / CONTROLS -->
+    <section class="card" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Settings</h2>
+      <div class="row">
+        <div class="controls">
+          <label class="pill">
+            <span class="muted small">Default speed (ft/s)</span>
+            <input id="speed" type="number" min="0.1" step="0.1" value="15" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Shooting rate (balls/s)</span>
+            <input id="bps" type="number" min="0.1" step="0.1" value="10" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Accel (ft/s^2)</span>
+            <input id="accel" type="number" min="0.1" step="0.1" value="10" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Decel (ft/s^2)</span>
+            <input id="decel" type="number" min="0.1" step="0.1" value="10" />
+          </label>
+
+          <span class="pill">
+            <input id="askShots" type="checkbox" />
+            <label for="askShots">Ask for shots at each stop</label>
+          </span>
+
+          <label class="pill">
+            <span class="muted small">Field length (ft)</span>
+            <input id="fieldL" type="number" min="1" step="0.01" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Field width (ft)</span>
+            <input id="fieldW" type="number" min="1" step="0.01" />
+          </label>
         </div>
 
-        <div class="divider"></div>
+        <div class="controls">
+          <label class="pill">
+            <span class="muted small">Field image</span>
+            <input id="imgFile" type="file" accept="image/*" />
+          </label>
 
-        <div class="grid">
-          <div class="timerBox">
-            <div class="muted small">Arena timer</div>
-            <div class="big2 mono" id="arenaTime" aria-live="polite">0:20</div>
-
-            <div class="timerMeta">
-              <span class="pill">
-                <span class="muted small">Phase:</span>
-                <span class="mono" id="phaseLabel">AUTO</span>
-              </span>
-
-              <span class="pill">
-                <span class="muted small">Your HUB:</span>
-                <span id="hubStatus" class="statusActive">Active</span>
-              </span>
-
-              <span class="pill">
-                <span class="muted small">Shift:</span>
-                <span class="mono" id="shiftLabel">—</span>
-              </span>
-            </div>
-
-            <p class="muted small" id="phaseNote" style="margin:6px 0 0;"></p>
-          </div>
-
-          <div>
-            <div class="row" style="align-items:flex-end;">
-              <div>
-                <div class="muted small">During SHIFT 1, your alliance HUB is…</div>
-                <select id="shift1Setting" class="btn" aria-label="Shift 1 hub active setting">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-
-              <button class="btn secondary" id="applySettings">Apply</button>
-            </div>
-
-            <p class="muted small" style="margin:10px 0 0;">
-              In the real match, this ordering depends on who scored more FUEL in AUTO and then alternates each SHIFT.
-              (This control just lets you simulate either case.)
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div class="grid">
-        <!-- FUEL -->
-        <section class="card" aria-labelledby="fuelTitle">
-          <div class="row">
-            <h2 id="fuelTitle" style="margin:0;">Fuel</h2>
-            <span class="pill">
-              <span class="muted small">Scoring right now:</span>
-              <span id="scoringNow" class="statusActive">Yes</span>
-            </span>
-          </div>
-
-          <div class="row" style="margin-top:12px;">
-            <div>
-              <div class="muted small">Fuel shot (count)</div>
-              <div class="big mono" id="fuelCount">0</div>
-              <div class="muted small" style="margin-top:6px;">Fuel points earned</div>
-              <div class="big mono" id="fuelPts">0</div>
-            </div>
-
-            <div class="controls" aria-label="Fuel controls">
-              <button class="btn" id="fuelPlus1" aria-label="Increase fuel by 1">+1</button>
-              <button class="btn" id="fuelPlus5" aria-label="Increase fuel by 5">+5</button>
-              <button class="btn" id="fuelPlus10" aria-label="Increase fuel by 10">+10</button>
-
-              <span class="break" aria-hidden="true"></span>
-
-              <button class="btn" id="fuelMinus1" aria-label="Decrease fuel by 1">–1</button>
-              <button class="btn" id="fuelMinus5" aria-label="Decrease fuel by 5">–5</button>
-              <button class="btn" id="fuelMinus10" aria-label="Decrease fuel by 10">–10</button>
-
-              <button class="btn secondary" id="fuelClear" aria-label="Reset fuel counters">Reset Fuel</button>
-            </div>
-          </div>
-
-          <p class="muted small" style="margin:12px 0 0;">
-            Fuel shot always counts. Fuel <em>points</em> only count when your HUB is active for the current phase.
-          </p>
-
-          <!-- Breakdown -->
-          <div class="divider"></div>
-          <div class="muted small">Fuel breakdown (shot vs scored)</div>
-          <table class="miniTable" aria-label="Fuel breakdown table">
-            <thead>
-              <tr>
-                <th>Segment</th>
-                <th class="right">Shot</th>
-                <th class="right">Scored</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-            <tr>
-              <td>AUTO</td>
-              <td class="right mono" id="autoShot">0</td>
-              <td class="right mono" id="autoScored">0</td>
-            </tr>
-            <tr>
-              <td>TRANSITION</td>
-              <td class="right mono" id="transShot">0</td>
-              <td class="right mono" id="transScored">0</td>
-            </tr>
-            <tr>
-              <td>SHIFT 1</td>
-              <td class="right mono" id="s1Shot">0</td>
-              <td class="right mono" id="s1Scored">0</td>
-            </tr>
-            <tr>
-              <td>SHIFT 2</td>
-              <td class="right mono" id="s2Shot">0</td>
-              <td class="right mono" id="s2Scored">0</td>
-            </tr>
-            <tr>
-              <td>SHIFT 3</td>
-              <td class="right mono" id="s3Shot">0</td>
-              <td class="right mono" id="s3Scored">0</td>
-            </tr>
-            <tr>
-              <td>SHIFT 4</td>
-              <td class="right mono" id="s4Shot">0</td>
-              <td class="right mono" id="s4Scored">0</td>
-            </tr>
-            <tr>
-              <td>END GAME</td>
-              <td class="right mono" id="endShot">0</td>
-              <td class="right mono" id="endScored">0</td>
-            </tr>
-            <tr>
-              <td>TELEOP total</td>
-              <td class="right mono" id="teleShot">0</td>
-              <td class="right mono" id="teleScored">0</td>
-            </tr>
-
-          </table>
-        </section>
-
-        <!-- CLIMB -->
-        <section class="card" aria-labelledby="climbTitle">
-          <h2 id="climbTitle" style="margin:0;">Climb (Tower)</h2>
-
-          <div class="row" style="margin-top:12px;">
-            <label for="autoClimb" class="muted small">AUTO climb</label>
-            <select id="autoClimb" class="btn" aria-label="Auto climb level">
-              <option value="0">None</option>
-              <option value="L1">Level 1 (15)</option>
-            </select>
-          </div>
-
-          <div class="row" style="margin-top:10px;">
-            <label for="teleopClimb" class="muted small">TELEOP climb</label>
-            <select id="teleopClimb" class="btn" aria-label="Teleop climb level">
-              <option value="0">None</option>
-              <option value="L1">Level 1 (10)</option>
-              <option value="L2">Level 2 (20)</option>
-              <option value="L3">Level 3 (30)</option>
-            </select>
-          </div>
-
-          <p class="muted small" style="margin:12px 0 0;">
-            (Manual values: AUTO L1=15; TELEOP L1=10, L2=20, L3=30.)
-          </p>
-        </section>
-      </div>
-
-      <!-- SCORE -->
-      <section class="card" aria-labelledby="scoreTitle">
-        <div class="row">
-          <h2 id="scoreTitle" style="margin:0;">Score</h2>
+          <button class="btn" id="fullscreen">Fullscreen</button>
+          <button class="btn" id="undo">Undo</button>
+          <button class="btn secondary" id="clear">Clear Path</button>
           <button class="btn secondary" id="resetAll">Reset All</button>
         </div>
+      </div>
 
-        <div class="grid" style="margin-top:12px;">
-          <div class="total">
-            <div class="muted small">Climb points</div>
-            <div class="big mono" id="climbPts">0</div>
-          </div>
-          <div class="total">
-            <div class="muted small">Total match points (this robot)</div>
-            <div class="big mono" id="totalPts">0</div>
-          </div>
+      <p class="muted small" style="margin:10px 0 0;">
+        Segment speeds default to the “Default speed” value when you create a segment.
+        You can override each segment in the breakdown table.
+      </p>
+    </section>
+
+    <!-- FIELD -->
+    <section class="card">
+      <h2>Field</h2>
+      <div class="canvasWrap" id="canvasWrap">
+        <canvas id="field"></canvas>
+      </div>
+      <div class="hint">
+        <div><strong>Click</strong> add point • <strong>Drag</strong> move • <strong>Shift+Click</strong> delete</div>
+        <div class="muted small">Shots (if enabled) are attached to the waypoint you stop at.</div>
+      </div>
+    </section>
+
+    <!-- TOTALS + WAYPOINTS -->
+    <section class="card">
+      <h2>Totals</h2>
+      <div class="kpi">
+        <div class="box">
+          <div class="lbl">Drive distance</div>
+          <div class="big mono" id="totDist">0.00 ft</div>
         </div>
-
-        <div class="muted small" id="note" style="margin-top:10px;"></div>
-
-        <!-- EXPORT -->
-        <div class="divider"></div>
-
-        <div class="row" style="align-items:flex-end;">
-          <div style="flex: 1; min-width: 260px;">
-            <div class="muted small">Match name (optional)</div>
-            <input id="matchName" class="textInput" type="text" placeholder="e.g., Practice 3 / Q12 / Finals 1" />
-          </div>
-
-          <div class="controls">
-            <button class="btn" id="exportBtn" disabled>Export match → Sheets</button>
-          </div>
+        <div class="box">
+          <div class="lbl">Drive time</div>
+          <div class="big mono" id="totDrive">0.00 s</div>
         </div>
+        <div class="box">
+          <div class="lbl">Shoot time</div>
+          <div class="big mono" id="totShoot">0.00 s</div>
+        </div>
+        <div class="box">
+          <div class="lbl">Total time</div>
+          <div class="big mono" id="totTime">0.00 s</div>
+        </div>
+      </div>
+    </section>
 
-        <div class="muted small" id="exportStatus" style="margin-top:8px;"></div>
-      </section>
-    </div>
+    <section class="card pointsList">
+      <h2>Waypoints</h2>
+      <div id="pointsUI" class="muted small">Click the field to add points.</div>
+    </section>
+
+    <!-- SIMPLE BREAKDOWN (NO MATH) -->
+    <section class="card">
+      <h2>Segment breakdown</h2>
+      <p class="muted small" style="margin-top:-4px;">
+        Each row uses its own speed with accel/decel limits.
+      </p>
+      <div style="overflow:auto;">
+        <table aria-label="Segment breakdown">
+          <thead>
+            <tr>
+              <th>Segment</th>
+              <th class="num">Speed (ft/s)</th>
+              <th class="num">Curved</th>
+              <th class="num">Distance (ft)</th>
+              <th class="num">Drive time (s)</th>
+              <th class="num">Balls @ end</th>
+              <th class="num">Shoot time (s)</th>
+              <th class="num">Segment total (s)</th>
+            </tr>
+          </thead>
+          <tbody id="segBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <script>
-    /***********************
-     * GOOGLE SHEETS EXPORT
-     ***********************/
-    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyaihZcQpQaRbn-z8bep9DqD1vjb5-_7bSpYkXSIsHf3JU4oe-xiEdlwKfmt68WZo-Fnw/exec";
-    const SHEETS_TOKEN = "6328";
+    // Default FIELD boundary from 2026 manual (inches -> feet)
+    const DEFAULT_FIELD_W_FT = 30; // set to 30 ft
+    const DEFAULT_FIELD_L_FT = 651.2 / 12; // ~54.267
 
-    // Scoring values:
-    const SCORE = {
-      fuelPointEach: 1,
-      auto: { "0": 0, "L1": 15 },
-      teleop: { "0": 0, "L1": 10, "L2": 20, "L3": 30 },
-    };
-
-    // Match structure:
-    const TIMING = {
-      autoSeconds: 20,
-      teleopSeconds: 140,
-      transitionSeconds: 10,
-      shiftSeconds: 25,
-      shiftCount: 4,
-      endgameSeconds: 30,
-      totalSeconds: 160, // 20 + 140
-    };
+    const STORAGE_KEY = "frc2026_field_mapper_v3_segment_speeds";
+    const canvas = document.getElementById("field");
+    const ctx = canvas.getContext("2d");
 
     const els = {
-      // timer
-      startPause: document.getElementById("startPause"),
-      resetTimer: document.getElementById("resetTimer"),
-      arenaTime: document.getElementById("arenaTime"),
-      phaseLabel: document.getElementById("phaseLabel"),
-      hubStatus: document.getElementById("hubStatus"),
-      shiftLabel: document.getElementById("shiftLabel"),
-      phaseNote: document.getElementById("phaseNote"),
-      shift1Setting: document.getElementById("shift1Setting"),
-      applySettings: document.getElementById("applySettings"),
-
-      // fuel
-      fuelCount: document.getElementById("fuelCount"),
-      fuelPts: document.getElementById("fuelPts"),
-      scoringNow: document.getElementById("scoringNow"),
-
-      fuelMinus10: document.getElementById("fuelMinus10"),
-      fuelMinus5: document.getElementById("fuelMinus5"),
-      fuelMinus1: document.getElementById("fuelMinus1"),
-      fuelPlus1: document.getElementById("fuelPlus1"),
-      fuelPlus5: document.getElementById("fuelPlus5"),
-      fuelPlus10: document.getElementById("fuelPlus10"),
-      fuelClear: document.getElementById("fuelClear"),
-
-      // breakdown
-      autoShot: document.getElementById("autoShot"),
-      autoScored: document.getElementById("autoScored"),
-      s1Shot: document.getElementById("s1Shot"),
-      s1Scored: document.getElementById("s1Scored"),
-      s2Shot: document.getElementById("s2Shot"),
-      s2Scored: document.getElementById("s2Scored"),
-      s3Shot: document.getElementById("s3Shot"),
-      s3Scored: document.getElementById("s3Scored"),
-      s4Shot: document.getElementById("s4Shot"),
-      s4Scored: document.getElementById("s4Scored"),
-      teleShot: document.getElementById("teleShot"),
-      teleScored: document.getElementById("teleScored"),
-      transShot: document.getElementById("transShot"),
-      transScored: document.getElementById("transScored"),
-      endShot: document.getElementById("endShot"),
-      endScored: document.getElementById("endScored"),
-
-
-      // climb/score
-      autoClimb: document.getElementById("autoClimb"),
-      teleopClimb: document.getElementById("teleopClimb"),
-      climbPts: document.getElementById("climbPts"),
-      totalPts: document.getElementById("totalPts"),
+      imgFile: document.getElementById("imgFile"),
+      undo: document.getElementById("undo"),
+      clear: document.getElementById("clear"),
       resetAll: document.getElementById("resetAll"),
-      note: document.getElementById("note"),
+      fullscreen: document.getElementById("fullscreen"),
+      canvasWrap: document.getElementById("canvasWrap"),
 
-      // export
-      matchName: document.getElementById("matchName"),
-      exportBtn: document.getElementById("exportBtn"),
-      exportStatus: document.getElementById("exportStatus"),
+      speed: document.getElementById("speed"),
+      bps: document.getElementById("bps"),
+      accel: document.getElementById("accel"),
+      decel: document.getElementById("decel"),
+      askShots: document.getElementById("askShots"),
+      fieldL: document.getElementById("fieldL"),
+      fieldW: document.getElementById("fieldW"),
+
+      totDist: document.getElementById("totDist"),
+      totDrive: document.getElementById("totDrive"),
+      totShoot: document.getElementById("totShoot"),
+      totTime: document.getElementById("totTime"),
+
+      pointsUI: document.getElementById("pointsUI"),
+      segBody: document.getElementById("segBody"),
     };
 
-    const STORAGE_KEY = "frc2026_practice_counter_v2_timed";
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const fmt = (n, d=2) => Number.isFinite(n) ? n.toFixed(d) : "—";
 
-    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    let fieldImg = new Image();
+    let hasImage = false;
 
-    function fmtTimeMMSS(totalSeconds) {
-      const m = Math.floor(totalSeconds / 60);
-      const s = totalSeconds % 60;
-      return `${m}:${String(s).padStart(2, "0")}`;
-    }
+    let state = loadState();
 
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          return {
-            // fuelEvents: [{earned:boolean, phase:string, shift:number|null, timeLeft:number|null}]
-            fuelEvents: [],
-            autoClimb: "0",
-            teleopClimb: "0",
-            timeLeft: TIMING.totalSeconds,
-            running: false,
-            shift1ActiveForUs: true,
-            lastMatchName: "",
-          };
-        }
-
+        if (!raw) return freshState();
         const s = JSON.parse(raw);
 
-        const rawEvents = Array.isArray(s.fuelEvents) ? s.fuelEvents.slice(0, 9999) : [];
-        const normalized = [];
+        const points = Array.isArray(s.points) ? s.points.map(p => ({
+          xPx: Number(p.xPx) || 0,
+          yPx: Number(p.yPx) || 0,
+          balls: Math.max(0, Math.trunc(Number(p.balls) || 0)),
+        })) : [];
 
-        for (const ev of rawEvents) {
-          // Backwards compat: older saves stored booleans
-          if (typeof ev === "boolean") {
-            normalized.push({ earned: ev, phase: "UNKNOWN", shift: null, timeLeft: null });
-          } else if (ev && typeof ev === "object") {
-            normalized.push({
-              earned: !!ev.earned,
-              phase: typeof ev.phase === "string" ? ev.phase : "UNKNOWN",
-              shift: Number.isFinite(ev.shift) ? ev.shift : null,
-              timeLeft: Number.isFinite(ev.timeLeft) ? ev.timeLeft : null,
-            });
-          }
-        }
+        const segmentSpeeds = Array.isArray(s.segmentSpeeds)
+          ? s.segmentSpeeds.map(v => (Number(v) > 0 ? Number(v) : null))
+          : [];
+
+        const segmentCurves = Array.isArray(s.segmentCurves)
+          ? s.segmentCurves.map(v => !!v)
+          : [];
+
+        // normalize length
+        normalizeSegmentSpeeds(points, segmentSpeeds, Number(s.speed) > 0 ? Number(s.speed) : 15);
+        normalizeSegmentCurves(points, segmentCurves, true);
 
         return {
-          fuelEvents: normalized,
-          autoClimb: (s.autoClimb in SCORE.auto) ? s.autoClimb : "0",
-          teleopClimb: (s.teleopClimb in SCORE.teleop) ? s.teleopClimb : "0",
-          timeLeft: Number.isFinite(s.timeLeft) ? clamp(Math.trunc(s.timeLeft), 0, TIMING.totalSeconds) : TIMING.totalSeconds,
-          running: !!s.running,
-          shift1ActiveForUs: (typeof s.shift1ActiveForUs === "boolean") ? s.shift1ActiveForUs : true,
-          lastMatchName: (typeof s.lastMatchName === "string") ? s.lastMatchName : "",
+          points,
+          segmentSpeeds,
+          segmentCurves,
+          speed: Number(s.speed) > 0 ? Number(s.speed) : 15,
+          bps: Number(s.bps) > 0 ? Number(s.bps) : 10,
+          accel: Number(s.accel) > 0 ? Number(s.accel) : 10,
+          decel: Number(s.decel) > 0 ? Number(s.decel) : 10,
+          askShots: !!s.askShots,
+          fieldL: Number(s.fieldL) > 0 ? Number(s.fieldL) : DEFAULT_FIELD_L_FT,
+          fieldW: Number(s.fieldW) > 0 ? Number(s.fieldW) : DEFAULT_FIELD_W_FT,
         };
       } catch {
-        return {
-          fuelEvents: [],
-          autoClimb: "0",
-          teleopClimb: "0",
-          timeLeft: TIMING.totalSeconds,
-          running: false,
-          shift1ActiveForUs: true,
-          lastMatchName: "",
-        };
+        return freshState();
       }
+    }
+
+    function freshState() {
+      return {
+        points: [],
+        segmentSpeeds: [], // one per segment (points.length - 1)
+        segmentCurves: [], // one per segment, true for curved
+        speed: 15,
+        bps: 10,
+        accel: 10,
+        decel: 10,
+        askShots: false,
+        fieldL: DEFAULT_FIELD_L_FT,
+        fieldW: DEFAULT_FIELD_W_FT,
+      };
     }
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    let state = loadState();
-    els.matchName.value = state.lastMatchName || "";
+    function hydrateInputsFromState() {
+      els.speed.value = String(state.speed);
+      els.bps.value = String(state.bps);
+      els.accel.value = String(state.accel);
+      els.decel.value = String(state.decel);
+      els.askShots.checked = state.askShots;
+      els.fieldL.value = String(state.fieldL.toFixed(4));
+      els.fieldW.value = String(state.fieldW.toFixed(4));
+    }
 
-    // ---- Phase logic ----
-    function getPhaseInfo(timeLeft) {
-      // timeLeft counts down from 160 -> 0
-      if (timeLeft > TIMING.teleopSeconds) {
-        // AUTO portion; displayed as 0:20..0:01
-        const autoLeft = timeLeft - TIMING.teleopSeconds; // 20..1
-        return {
-          phase: "AUTO",
-          arenaDisplay: `0:${String(autoLeft).padStart(2, "0")}`,
-          hubActiveForUs: true,
-          shift: null,
-          note: "Both HUBs active in AUTO.",
-        };
+    // Ensure segmentSpeeds has exactly points.length-1 entries.
+    function normalizeSegmentSpeeds(points, segmentSpeeds, defaultSpeed) {
+      const need = Math.max(0, points.length - 1);
+      while (segmentSpeeds.length < need) segmentSpeeds.push(defaultSpeed);
+      while (segmentSpeeds.length > need) segmentSpeeds.pop();
+      // Replace invalids with default
+      for (let i = 0; i < segmentSpeeds.length; i++) {
+        if (!(Number(segmentSpeeds[i]) > 0)) segmentSpeeds[i] = defaultSpeed;
       }
+    }
 
-      const teleopLeft = timeLeft; // 140..0
-      const arenaDisplay = fmtTimeMMSS(teleopLeft);
+    // Ensure segmentCurves has exactly points.length-1 entries.
+    function normalizeSegmentCurves(points, segmentCurves, defaultCurve = true) {
+      const need = Math.max(0, points.length - 1);
+      while (segmentCurves.length < need) segmentCurves.push(defaultCurve);
+      while (segmentCurves.length > need) segmentCurves.pop();
+    }
 
-      if (teleopLeft > (TIMING.teleopSeconds - TIMING.transitionSeconds)) {
-        // 140..131 transition
-        return {
-          phase: "TRANSITION SHIFT",
-          arenaDisplay,
-          hubActiveForUs: true,
-          shift: null,
-          note: "Both HUBs active in TRANSITION SHIFT.",
-        };
+    // Crisp canvas sizing
+    function resizeCanvasToCSS() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+      render();
+    }
+    window.addEventListener("resize", resizeCanvasToCSS);
+
+    // Field rect inside canvas (keeps correct aspect = fieldL/fieldW)
+    function getFieldRect() {
+      const rect = canvas.getBoundingClientRect();
+      const aspect = state.fieldL / state.fieldW; // length / width
+      const canvasAspect = rect.width / rect.height;
+
+      let w, h, x, y;
+      if (canvasAspect > aspect) {
+        h = rect.height;
+        w = h * aspect;
+        x = (rect.width - w) / 2;
+        y = 0;
+      } else {
+        w = rect.width;
+        h = w / aspect;
+        x = 0;
+        y = (rect.height - h) / 2;
       }
+      return { x, y, w, h };
+    }
 
-      if (teleopLeft <= TIMING.endgameSeconds) {
-        return {
-          phase: "END GAME",
-          arenaDisplay,
-          hubActiveForUs: true,
-          shift: null,
-          note: "Both HUBs active in END GAME.",
-        };
-      }
+    function pxToFt(dxPx, dyPx) {
+      const fr = getFieldRect();
+      const ftPerPxX = state.fieldL / fr.w;
+      const ftPerPxY = state.fieldW / fr.h;
+      return { xFt: dxPx * ftPerPxX, yFt: dyPx * ftPerPxY };
+    }
 
-      // Determine SHIFT 1..4
-      let shift = null;
-      if (teleopLeft <= 130 && teleopLeft > 105) shift = 1;
-      else if (teleopLeft <= 105 && teleopLeft > 80) shift = 2;
-      else if (teleopLeft <= 80 && teleopLeft > 55) shift = 3;
-      else if (teleopLeft <= 55 && teleopLeft > 30) shift = 4;
-      else shift = 4; // fallback
-
-      const activeInShift1 = state.shift1ActiveForUs;
-      const hubActiveForUs = (shift % 2 === 1) ? activeInShift1 : !activeInShift1;
-
+    function pointPxToFt(p) {
+      const fr = getFieldRect();
+      const ftPerPxX = state.fieldL / fr.w;
+      const ftPerPxY = state.fieldW / fr.h;
       return {
-        phase: `SHIFT ${shift}`,
-        arenaDisplay,
-        hubActiveForUs,
-        shift,
-        note: "Only one alliance HUB is active during SHIFTS; it alternates each SHIFT.",
+        xFt: (p.xPx - fr.x) * ftPerPxX,
+        yFt: (p.yPx - fr.y) * ftPerPxY
       };
     }
 
-    // ---- Scoring derived from event history ----
-    function getFuelCount() { return state.fuelEvents.length; }
+    function drawBackground() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
 
-    function getFuelPoints() {
-      let pts = 0;
-      for (const ev of state.fuelEvents) if (ev.earned) pts += SCORE.fuelPointEach;
-      return pts;
-    }
+      ctx.fillStyle = "#0f1220";
+      ctx.fillRect(0, 0, rect.width, rect.height);
 
-    function getFuelActiveCount() {
-      let c = 0;
-      for (const ev of state.fuelEvents) if (ev.earned) c++;
-      return c;
-    }
+      const fr = getFieldRect();
 
-    function getFuelInactiveCount() {
-      let c = 0;
-      for (const ev of state.fuelEvents) if (!ev.earned) c++;
-      return c;
-    }
+      if (hasImage) {
+        ctx.drawImage(fieldImg, fr.x, fr.y, fr.w, fr.h);
+        ctx.fillStyle = "rgba(10,12,16,0.25)";
+        ctx.fillRect(fr.x, fr.y, fr.w, fr.h);
+      } else {
+        ctx.fillStyle = "rgba(245,246,250,0.06)";
+        ctx.fillRect(fr.x, fr.y, fr.w, fr.h);
 
-    function getClimbPoints() {
-      return SCORE.auto[state.autoClimb] + SCORE.teleop[state.teleopClimb];
-    }
-
-    // Shot/scored breakdown for AUTO/TELE + SHIFTS
-    function summarizeFuel() {
-      const out = {
-        auto: { shot: 0, scored: 0 },
-        transition: { shot: 0, scored: 0 },
-        endgame: { shot: 0, scored: 0 },
-        tele: { shot: 0, scored: 0 }, // everything except AUTO
-        shifts: {
-          1: { shot: 0, scored: 0 },
-          2: { shot: 0, scored: 0 },
-          3: { shot: 0, scored: 0 },
-          4: { shot: 0, scored: 0 },
-        },
-      };
-
-      for (const ev of state.fuelEvents) {
-        const earned = !!ev.earned;
-
-        // Teleop total = everything except AUTO
-        if (ev.phase !== "AUTO") {
-          out.tele.shot++;
-          if (earned) out.tele.scored++;
-        }
-
-        // Specific buckets
-        if (ev.phase === "AUTO") {
-          out.auto.shot++;
-          if (earned) out.auto.scored++;
-          continue;
-        }
-
-        if (ev.phase === "TRANSITION SHIFT") {
-          out.transition.shot++;
-          if (earned) out.transition.scored++;
-          continue;
-        }
-
-        if (ev.phase === "END GAME") {
-          out.endgame.shot++;
-          if (earned) out.endgame.scored++;
-          continue;
-        }
-
-        // SHIFT 1..4
-        if (typeof ev.shift === "number" && ev.shift >= 1 && ev.shift <= 4) {
-          out.shifts[ev.shift].shot++;
-          if (earned) out.shifts[ev.shift].scored++;
-        }
+        ctx.fillStyle = "rgba(245,246,250,0.85)";
+        ctx.font = "14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillText("No image loaded — put field.png next to this HTML or upload one.", fr.x + 12, fr.y + 22);
       }
 
-      return out;
+      ctx.strokeStyle = "rgba(110,168,255,0.35)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fr.x, fr.y, fr.w, fr.h);
     }
 
+    function drawPath() {
+      if (state.points.length >= 2) {
+        ctx.strokeStyle = "rgba(245,246,250,0.95)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(state.points[0].xPx, state.points[0].yPx);
+        for (let i = 1; i < state.points.length; i++) {
+          const prev = state.points[i - 1];
+          const cur = state.points[i];
+          const isCurved = state.segmentCurves[i - 1];
+          if (isCurved) {
+            const midX = (prev.xPx + cur.xPx) / 2;
+            const midY = (prev.yPx + cur.yPx) / 2;
+            ctx.quadraticCurveTo(prev.xPx, prev.yPx, midX, midY);
+          } else {
+            ctx.lineTo(cur.xPx, cur.yPx);
+          }
+        }
+        ctx.stroke();
+      }
 
-    // ---- Export ----
-    function setExportUI() {
-      const matchOver = (state.timeLeft === 0);
-      els.exportBtn.disabled = !matchOver;
+      for (let i = 0; i < state.points.length; i++) {
+        const p = state.points[i];
+        const r = 11;
 
-      if (!matchOver) {
-        // leave status as-is unless you want it cleared constantly
+        ctx.fillStyle = "rgba(110,168,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(p.xPx, p.yPx, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(10,12,16,0.6)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(10,12,16,0.95)";
+        ctx.font = "bold 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(i + 1), p.xPx, p.yPx);
+      }
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+    }
+
+    function computeSegments() {
+      const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+      const bps = Math.max(0.0001, Number(els.bps.value));
+      const accel = Math.max(0.0001, Number(els.accel.value));
+      const decel = Math.max(0.0001, Number(els.decel.value));
+      const askShots = els.askShots.checked;
+
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
+
+      let totalDist = 0, totalDrive = 0, totalShoot = 0;
+      const segs = [];
+
+      for (let i = 1; i < state.points.length; i++) {
+        const a = state.points[i - 1];
+        const b = state.points[i];
+
+        const dxPx = b.xPx - a.xPx;
+        const dyPx = b.yPx - a.yPx;
+        const { xFt: dxFt, yFt: dyFt } = pxToFt(dxPx, dyPx);
+
+        const distFt = Math.hypot(dxFt, dyFt);
+
+        const segSpeed = Math.max(0.0001, Number(state.segmentSpeeds[i - 1]) || defaultSpeed);
+        const driveT = driveTimeWithAccel(distFt, segSpeed, accel, decel);
+
+        const balls = (askShots ? Math.max(0, Math.trunc(Number(b.balls || 0))) : 0);
+        const shootT = (askShots ? balls / bps : 0);
+
+        totalDist += distFt;
+        totalDrive += driveT;
+        totalShoot += shootT;
+
+        segs.push({ i, segSpeed, distFt, driveT, balls, shootT, segT: driveT + shootT });
+      }
+
+      return { segs, totalDist, totalDrive, totalShoot, totalTime: totalDrive + totalShoot };
+    }
+
+    function renderTables() {
+      const { segs, totalDist, totalDrive, totalShoot, totalTime } = computeSegments();
+
+      els.totDist.textContent = `${fmt(totalDist, 2)} ft`;
+      els.totDrive.textContent = `${fmt(totalDrive, 2)} s`;
+      els.totShoot.textContent = `${fmt(totalShoot, 2)} s`;
+      els.totTime.textContent = `${fmt(totalTime, 2)} s`;
+
+      // segments table (with editable speed)
+      els.segBody.innerHTML = "";
+      for (const s of segs) {
+        const tr = document.createElement("tr");
+
+        const segName = document.createElement("td");
+        segName.innerHTML = `<span class="mono">${s.i} → ${s.i + 1}</span>`;
+        tr.appendChild(segName);
+
+        const speedTd = document.createElement("td");
+        speedTd.className = "num";
+        const speedInput = document.createElement("input");
+        speedInput.className = "segSpeed mono";
+        speedInput.type = "number";
+        speedInput.min = "0.1";
+        speedInput.step = "0.1";
+        speedInput.value = String(Number(s.segSpeed).toFixed(1));
+        speedInput.title = "Segment speed (ft/s)";
+        speedInput.addEventListener("change", () => {
+          const v = Number(speedInput.value);
+          const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+          state.segmentSpeeds[s.i - 1] = (v > 0 ? v : defaultSpeed);
+          saveState();
+          render();
+        });
+        speedTd.appendChild(speedInput);
+        tr.appendChild(speedTd);
+
+        const curveTd = document.createElement("td");
+        curveTd.className = "num";
+        const curveCheckbox = document.createElement("input");
+        curveCheckbox.type = "checkbox";
+        curveCheckbox.checked = state.segmentCurves[s.i - 1];
+        curveCheckbox.addEventListener("change", () => {
+          state.segmentCurves[s.i - 1] = curveCheckbox.checked;
+          saveState();
+          render();
+        });
+        curveTd.appendChild(curveCheckbox);
+        tr.appendChild(curveTd);
+
+        const dist = document.createElement("td"); dist.className = "num"; dist.textContent = fmt(s.distFt, 2); tr.appendChild(dist);
+        const dt = document.createElement("td"); dt.className = "num"; dt.textContent = fmt(s.driveT, 2); tr.appendChild(dt);
+        const balls = document.createElement("td"); balls.className = "num"; balls.textContent = String(s.balls); tr.appendChild(balls);
+        const st = document.createElement("td"); st.className = "num"; st.textContent = fmt(s.shootT, 2); tr.appendChild(st);
+        const segT = document.createElement("td"); segT.className = "num"; segT.textContent = fmt(s.segT, 2); tr.appendChild(segT);
+
+        els.segBody.appendChild(tr);
+      }
+
+      // waypoints UI
+      if (state.points.length === 0) {
+        els.pointsUI.textContent = "Click the field to add points.";
         return;
       }
 
-      if (!els.exportStatus.textContent) {
-        els.exportStatus.textContent = "Match ended — ready to export to Google Sheets.";
-      }
+      const ask = els.askShots.checked;
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "8px";
+
+      state.points.forEach((p, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.border = "1px solid #242845";
+        row.style.borderRadius = "14px";
+        row.style.padding = "8px 10px";
+        row.style.background = "#101325";
+
+        const ft = pointPxToFt(p);
+        const left = document.createElement("div");
+        left.innerHTML = `
+          <div><strong class="mono">#${idx + 1}</strong></div>
+          <div class="muted small mono">x=${fmt(ft.xFt,2)} ft, y=${fmt(ft.yFt,2)} ft</div>
+        `;
+
+        const right = document.createElement("div");
+        right.className = "controls";
+
+        if (ask && idx > 0) {
+          const lab = document.createElement("label");
+          lab.className = "muted small";
+          lab.textContent = "Balls";
+
+          const inp = document.createElement("input");
+          inp.type = "number";
+          inp.min = "0";
+          inp.step = "1";
+          inp.value = String(p.balls || 0);
+          inp.addEventListener("change", () => {
+            p.balls = Math.max(0, Math.trunc(Number(inp.value) || 0));
+            saveState();
+            render();
+          });
+
+          right.appendChild(lab);
+          right.appendChild(inp);
+        }
+
+        if (idx > 0) {
+          const del = document.createElement("button");
+          del.className = "btn secondary";
+          del.textContent = "Delete";
+          del.addEventListener("click", () => {
+            state.points.splice(idx, 1);
+            const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+            normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+            normalizeSegmentCurves(state.points, state.segmentCurves, true);
+            saveState();
+            render();
+          });
+          right.appendChild(del);
+        }
+
+        row.appendChild(left);
+        row.appendChild(right);
+        wrap.appendChild(row);
+      });
+
+      els.pointsUI.innerHTML = "";
+      els.pointsUI.appendChild(wrap);
     }
 
-    async function exportToSheetsRow() {
-      if (state.timeLeft !== 0) return;
-
-      let name = (els.matchName.value || "").trim();
-      if (!name) {
-        name = (prompt("Name this match (ex: Practice 3, Q12, etc.)", "") || "").trim();
-      }
-      els.matchName.value = name;
-      state.lastMatchName = name;
-      saveState();
-
-      const fuelCount = getFuelCount();
-      const fuelPts = getFuelPoints();
-      const fuelActive = getFuelActiveCount();
-      const fuelInactive = getFuelInactiveCount();
-      const climbPts = getClimbPoints();
-      const totalPts = fuelPts + climbPts;
-
-      const fuelSum = summarizeFuel();
-
-      // Payload matches your Apps Script HEADERS
-      const payload = {
-        token: SHEETS_TOKEN,
-        match_name: name,
-        shift1_setting: state.shift1ActiveForUs ? "active" : "inactive",
-
-        fuel_in_total: fuelCount,
-        fuel_points: fuelPts,
-        fuel_in_active: fuelActive,
-        fuel_in_inactive: fuelInactive,
-
-        auto_fuel_in: fuelSum.auto.shot,
-        auto_fuel_scored_pts: fuelSum.auto.scored * SCORE.fuelPointEach,
-        tele_fuel_in: fuelSum.tele.shot,
-        tele_fuel_scored_pts: fuelSum.tele.scored * SCORE.fuelPointEach,
-
-        shift1_fuel_in: fuelSum.shifts[1].shot,
-        shift1_fuel_scored: fuelSum.shifts[1].scored,
-        shift2_fuel_in: fuelSum.shifts[2].shot,
-        shift2_fuel_scored: fuelSum.shifts[2].scored,
-        shift3_fuel_in: fuelSum.shifts[3].shot,
-        shift3_fuel_scored: fuelSum.shifts[3].scored,
-        shift4_fuel_in: fuelSum.shifts[4].shot,
-        shift4_fuel_scored: fuelSum.shifts[4].scored,
-        transition_fuel_in: fuelSum.transition.shot,
-        transition_fuel_scored: fuelSum.transition.scored,
-        endgame_fuel_in: fuelSum.endgame.shot,
-        endgame_fuel_scored: fuelSum.endgame.scored,
-
-
-        climb_auto: state.autoClimb,
-        climb_teleop: state.teleopClimb,
-        climb_pts: climbPts,
-        total_pts: totalPts,
-      };
-
-      const url = `${SHEETS_WEBAPP_URL}?${new URLSearchParams(payload).toString()}`;
-
-      els.exportStatus.textContent = "Opening export result in a new tab…";
-
-      const win = window.open(url, "_blank", "noopener");
-      if (win) {
-        els.exportStatus.textContent = "Export opened — read the message in the new tab (ok / bad token / error).";
-      } else {
-        els.exportStatus.textContent = "Popup blocked — allow popups and click Export again.";
-      }
-    }
-
-    // ---- Render ----
     function render() {
-      const info = getPhaseInfo(state.timeLeft);
+      // mirror inputs -> state
+      state.speed = Number(els.speed.value) > 0 ? Number(els.speed.value) : 15;
+      state.bps = Number(els.bps.value) > 0 ? Number(els.bps.value) : 10;
+      state.accel = Number(els.accel.value) > 0 ? Number(els.accel.value) : 10;
+      state.decel = Number(els.decel.value) > 0 ? Number(els.decel.value) : 10;
+      state.askShots = els.askShots.checked;
+      state.fieldL = Number(els.fieldL.value) > 0 ? Number(els.fieldL.value) : DEFAULT_FIELD_L_FT;
+      state.fieldW = Number(els.fieldW.value) > 0 ? Number(els.fieldW.value) : DEFAULT_FIELD_W_FT;
 
-      els.arenaTime.textContent = info.arenaDisplay;
-      els.phaseLabel.textContent = info.phase;
-      els.phaseNote.textContent = info.note;
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, state.speed);
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
 
-      els.shiftLabel.textContent = info.shift ? String(info.shift) : "—";
-
-      els.hubStatus.textContent = info.hubActiveForUs ? "Active" : "Inactive";
-      els.hubStatus.className = info.hubActiveForUs ? "statusActive" : "statusInactive";
-
-      els.scoringNow.textContent = info.hubActiveForUs ? "Yes" : "No";
-      els.scoringNow.className = info.hubActiveForUs ? "statusActive" : "statusInactive";
-
-      els.startPause.textContent = state.running ? "Pause" : "Start";
-      els.shift1Setting.value = state.shift1ActiveForUs ? "active" : "inactive";
-
-      const fuelCount = getFuelCount();
-      const fuelPts = getFuelPoints();
-      const climbPts = getClimbPoints();
-      const total = fuelPts + climbPts;
-
-      els.fuelCount.textContent = String(fuelCount);
-      els.fuelPts.textContent = String(fuelPts);
-      els.climbPts.textContent = String(climbPts);
-      els.totalPts.textContent = String(total);
-
-      // breakdown table
-      const sum = summarizeFuel();
-      els.transShot.textContent = String(sum.transition.shot);
-      els.transScored.textContent = String(sum.transition.scored);
-
-      els.endShot.textContent = String(sum.endgame.shot);
-      els.endScored.textContent = String(sum.endgame.scored);
-
-      els.autoShot.textContent = String(sum.auto.shot);
-      els.autoScored.textContent = String(sum.auto.scored);
-      els.s1Shot.textContent = String(sum.shifts[1].shot);
-      els.s1Scored.textContent = String(sum.shifts[1].scored);
-      els.s2Shot.textContent = String(sum.shifts[2].shot);
-      els.s2Scored.textContent = String(sum.shifts[2].scored);
-      els.s3Shot.textContent = String(sum.shifts[3].shot);
-      els.s3Scored.textContent = String(sum.shifts[3].scored);
-      els.s4Shot.textContent = String(sum.shifts[4].shot);
-      els.s4Scored.textContent = String(sum.shifts[4].scored);
-      els.teleShot.textContent = String(sum.tele.shot);
-      els.teleScored.textContent = String(sum.tele.scored);
-
-      if (info.shift) {
-        els.note.textContent = info.hubActiveForUs
-          ? `You can score right now (SHIFT ${info.shift}).`
-          : `Your HUB is inactive right now (SHIFT ${info.shift}) — fuel will count but won't score points.`;
-      } else {
-        els.note.textContent = "";
-      }
-
-      setExportUI();
+      drawBackground();
+      drawPath();
+      renderTables();
       saveState();
     }
 
-    // ---- Fuel events: plus adds events, minus undoes most recent events ----
-    function addFuel(n) {
-      const info = getPhaseInfo(state.timeLeft);
-      const willScore = !!info.hubActiveForUs;
+    // Pointer handling: add/drag/delete
+    let draggingIdx = -1;
+    const HIT_R = 16;
 
-      for (let i = 0; i < n; i++) {
-        if (state.fuelEvents.length >= 9999) break;
-        state.fuelEvents.push({
-          earned: willScore,
-          phase: info.phase,
-          shift: info.shift,          // 1..4 or null
-          timeLeft: state.timeLeft,   // seconds remaining on full match clock
-        });
+    function getMousePos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    }
+
+    function hitTest(x, y) {
+      for (let i = state.points.length - 1; i >= 0; i--) {
+        const p = state.points[i];
+        if (Math.hypot(p.xPx - x, p.yPx - y) <= HIT_R) return i;
       }
-      render();
+      return -1;
     }
 
-    function removeFuel(n) {
-      for (let i = 0; i < n; i++) {
-        if (state.fuelEvents.length === 0) break;
-        state.fuelEvents.pop();
-      }
-      render();
-    }
-
-    // ---- Timer ----
-    let intervalId = null;
-    let lastTickMs = null;
-
-    function stopTimer() {
-      state.running = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-      lastTickMs = null;
-      render();
-    }
-
-    function startTimer() {
-      // Starting a new match clears export status text (but keeps match name)
-      els.exportStatus.textContent = "";
-
-      if (state.timeLeft <= 0) state.timeLeft = TIMING.totalSeconds;
-      state.running = true;
-      lastTickMs = Date.now();
-
-      if (!intervalId) {
-        intervalId = setInterval(() => {
-          if (!state.running) return;
-
-          const now = Date.now();
-          const elapsed = Math.floor((now - lastTickMs) / 1000);
-          if (elapsed <= 0) return;
-
-          lastTickMs += elapsed * 1000;
-          state.timeLeft = clamp(state.timeLeft - elapsed, 0, TIMING.totalSeconds);
-
-          // auto-stop at end
-          if (state.timeLeft === 0) stopTimer();
-          else render();
-        }, 250);
-      }
-
-      render();
-    }
-
-    // ---- Events ----
-    els.startPause.addEventListener("click", () => {
-      if (state.running) stopTimer();
-      else startTimer();
-    });
-
-    els.resetTimer.addEventListener("click", () => {
-      stopTimer();
-      state.timeLeft = TIMING.totalSeconds;
-      els.exportStatus.textContent = "";
-      render();
-    });
-
-    els.applySettings.addEventListener("click", () => {
-      state.shift1ActiveForUs = (els.shift1Setting.value === "active");
-      render();
-    });
-
-    // fuel
-    function bumpFuel(delta) {
-      if (delta > 0) addFuel(delta);
-      else if (delta < 0) removeFuel(Math.abs(delta));
-    }
-
-    els.fuelPlus1.addEventListener("click", () => bumpFuel(1));
-    els.fuelPlus5.addEventListener("click", () => bumpFuel(5));
-    els.fuelPlus10.addEventListener("click", () => bumpFuel(10));
-
-    els.fuelMinus1.addEventListener("click", () => bumpFuel(-1));
-    els.fuelMinus5.addEventListener("click", () => bumpFuel(-5));
-    els.fuelMinus10.addEventListener("click", () => bumpFuel(-10));
-
-    els.fuelClear.addEventListener("click", () => {
-      state.fuelEvents = [];
-      render();
-    });
-
-    // climbs
-    els.autoClimb.addEventListener("change", () => { state.autoClimb = els.autoClimb.value; render(); });
-    els.teleopClimb.addEventListener("change", () => { state.teleopClimb = els.teleopClimb.value; render(); });
-
-    // match name persistence
-    els.matchName.addEventListener("change", () => {
-      state.lastMatchName = (els.matchName.value || "").trim();
-      saveState();
-    });
-
-    // export
-    els.exportBtn.addEventListener("click", exportToSheetsRow);
-
-    // reset all
-    els.resetAll.addEventListener("click", () => {
-      stopTimer();
-      state = {
-        fuelEvents: [],
-        autoClimb: "0",
-        teleopClimb: "0",
-        timeLeft: TIMING.totalSeconds,
-        running: false,
-        shift1ActiveForUs: true,
-        lastMatchName: "",
+    function clampToField(x, y) {
+      const fr = getFieldRect();
+      return {
+        x: clamp(x, fr.x, fr.x + fr.w),
+        y: clamp(y, fr.y, fr.y + fr.h),
       };
-      els.matchName.value = "";
-      els.exportStatus.textContent = "";
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      const { x, y } = getMousePos(e);
+      const idx = hitTest(x, y);
+
+      if (idx !== -1) {
+        if (e.shiftKey && idx > 0) {
+          state.points.splice(idx, 1);
+          normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+          normalizeSegmentCurves(state.points, state.segmentCurves, true);
+          render();
+          return;
+        }
+        draggingIdx = idx;
+        return;
+      }
+
+      const { x: px, y: py } = clampToField(x, y);
+      const newPoint = { xPx: px, yPx: py, balls: 0 };
+
+      if (els.askShots.checked && state.points.length >= 1) {
+        const raw = prompt("Balls to shoot from this stop? (0+)", "0");
+        newPoint.balls = Math.max(0, Math.trunc(Number(raw) || 0));
+      }
+
+      state.points.push(newPoint);
+
+      // Adding a point creates a new segment (if we now have 2+ points)
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
+
       render();
     });
 
-    // initial paint
+    canvas.addEventListener("pointermove", (e) => {
+      if (draggingIdx === -1) return;
+      const { x, y } = getMousePos(e);
+      const clamped = clampToField(x, y);
+      state.points[draggingIdx].xPx = clamped.x;
+      state.points[draggingIdx].yPx = clamped.y;
+      render();
+    });
+
+    canvas.addEventListener("pointerup", () => { draggingIdx = -1; });
+    canvas.addEventListener("pointercancel", () => { draggingIdx = -1; });
+
+    // Image loading
+    function loadDefaultImage() {
+      fieldImg = new Image();
+      fieldImg.onload = () => { hasImage = true; render(); };
+      fieldImg.onerror = () => { hasImage = false; render(); };
+      fieldImg.src = "field.png";
+    }
+
+    function setImageFromFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      fieldImg = new Image();
+      fieldImg.onload = () => { hasImage = true; URL.revokeObjectURL(url); render(); };
+      fieldImg.src = url;
+    }
+
+    els.imgFile.addEventListener("change", (e) => setImageFromFile(e.target.files?.[0]));
+
+    // Buttons
+    els.undo.addEventListener("click", () => {
+      state.points.pop();
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
+      render();
+    });
+
+    els.clear.addEventListener("click", () => {
+      state.points = [];
+      state.segmentSpeeds = [];
+      state.segmentCurves = [];
+      render();
+    });
+
+    els.resetAll.addEventListener("click", () => {
+      state = freshState();
+      hydrateInputsFromState();
+      render();
+    });
+
+    els.fullscreen.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) await els.canvasWrap.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch {}
+    });
+
+    // Inputs
+    ["input","change"].forEach(ev => {
+      els.speed.addEventListener(ev, () => {
+        // Note: default speed does NOT overwrite existing segment speeds;
+        // it only affects new segments and any invalid speed.
+        render();
+      });
+      els.bps.addEventListener(ev, render);
+      els.accel.addEventListener(ev, render);
+      els.decel.addEventListener(ev, render);
+      els.askShots.addEventListener(ev, render);
+      els.fieldL.addEventListener(ev, render);
+      els.fieldW.addEventListener(ev, render);
+    });
+
+    // Init
+    hydrateInputsFromState();
+    loadDefaultImage();
+    requestAnimationFrame(resizeCanvasToCSS);
     render();
+
+    function driveTimeWithAccel(distFt, maxSpeed, accel, decel) {
+      const v = Math.max(0.0001, maxSpeed);
+      const a = Math.max(0.0001, accel);
+      const d = Math.max(0.0001, decel);
+
+      const tToV = v / a;
+      const tFromV = v / d;
+      const distAccel = 0.5 * a * tToV * tToV; // v^2 / (2a)
+      const distDecel = 0.5 * d * tFromV * tFromV; // v^2 / (2d)
+
+      if (distFt >= distAccel + distDecel) {
+        const cruiseDist = distFt - distAccel - distDecel;
+        return tToV + tFromV + (cruiseDist / v);
+      }
+
+      // Triangle profile: never reaches maxSpeed.
+      const vPeak = Math.sqrt((2 * distFt * a * d) / (a + d));
+      return (vPeak / a) + (vPeak / d);
+    }
   </script>
 </body>
-
 </html>
