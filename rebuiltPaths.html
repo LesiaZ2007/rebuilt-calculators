@@ -397,13 +397,28 @@
       ctx.strokeRect(fr.x, fr.y, fr.w, fr.h);
     }
 
+    // Helper: simple linear interpolation
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    // Draw a smooth curved path instead of straight lines
     function drawPath() {
       if (state.points.length >= 2) {
         ctx.strokeStyle = "rgba(245,246,250,0.95)";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(state.points[0].xPx, state.points[0].yPx);
-        for (let i = 1; i < state.points.length; i++) ctx.lineTo(state.points[i].xPx, state.points[i].yPx);
+
+        // Use quadratic curves between points, with control points at each waypoint
+        for (let i = 1; i < state.points.length; i++) {
+          const prev = state.points[i - 1];
+          const cur = state.points[i];
+          const midX = (prev.xPx + cur.xPx) / 2;
+          const midY = (prev.yPx + cur.yPx) / 2;
+          ctx.quadraticCurveTo(prev.xPx, prev.yPx, midX, midY);
+        }
+        // ensure path reaches final point
+        const last = state.points[state.points.length - 1];
+        ctx.lineTo(last.xPx, last.yPx);
         ctx.stroke();
       }
 
@@ -431,6 +446,37 @@
       ctx.textBaseline = "alphabetic";
     }
 
+    // Motion profiling constants (ft/s^2)
+    const DEFAULT_ACCEL = 8; // ft/s^2
+    const DEFAULT_DECEL = 8; // ft/s^2
+
+    // Compute travel time for a single segment using trapezoidal/triangular profile
+    function computeDriveTimeForSegment(dist, v0, vCruise, vEnd, accel = DEFAULT_ACCEL, decel = DEFAULT_DECEL) {
+      // handle degenerate cases
+      if (dist <= 0) return 0;
+      // distances required to accel/decel
+      const accelDist = Math.max(0, (vCruise * vCruise - v0 * v0) / (2 * accel));
+      const decelDist = Math.max(0, (vCruise * vCruise - vEnd * vEnd) / (2 * decel));
+
+      if (accelDist + decelDist <= dist) {
+        // trapezoid: accel, cruise, decel
+        const tAccel = (vCruise - v0) / accel;
+        const tDecel = (vCruise - vEnd) / decel;
+        const cruiseDist = dist - accelDist - decelDist;
+        const tCruise = cruiseDist / Math.max(0.000001, vCruise);
+        return Math.max(0, tAccel + tCruise + tDecel);
+      } else {
+        // triangular: peak velocity vp reached (no constant cruise)
+        const denom = (1 / (2 * accel)) + (1 / (2 * decel));
+        const numer = dist + (v0 * v0) / (2 * accel) + (vEnd * vEnd) / (2 * decel);
+        const vp2 = Math.max(0, numer / denom);
+        const vp = Math.sqrt(vp2);
+        const tAccel = Math.max(0, (vp - v0) / accel);
+        const tDecel = Math.max(0, (vp - vEnd) / decel);
+        return Math.max(0, tAccel + tDecel);
+      }
+    }
+
     function computeSegments() {
       const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
       const bps = Math.max(0.0001, Number(els.bps.value));
@@ -452,10 +498,15 @@
         const distFt = Math.hypot(dxFt, dyFt);
 
         const segSpeed = Math.max(0.0001, Number(state.segmentSpeeds[i - 1]) || defaultSpeed);
-        const driveT = distFt / segSpeed;
 
+        // Determine entry and exit speeds for this segment.
+        const v0 = (i === 1) ? 0 : Math.max(0, Number(state.segmentSpeeds[i - 2]) || defaultSpeed);
+        // if we will shoot at the end, assume we come to a stop
         const balls = (askShots ? Math.max(0, Math.trunc(Number(b.balls || 0))) : 0);
         const shootT = (askShots ? balls / bps : 0);
+        const vEnd = (balls > 0) ? 0 : (i < state.points.length - 1 ? Math.max(0, Number(state.segmentSpeeds[i] || defaultSpeed)) : segSpeed);
+
+        const driveT = computeDriveTimeForSegment(distFt, v0, segSpeed, vEnd);
 
         totalDist += distFt;
         totalDrive += driveT;
