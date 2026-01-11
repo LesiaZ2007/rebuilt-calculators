@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FRC 2026 REBUILT – Practice Counter</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0c10; color: #f5f6fa; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+    .card { background: #141621; border: 1px solid #242845; border-radius: 16px; padding: 16px; margin: 14px 0; }
+    h1 { font-size: 1.25rem; margin: 0 0 6px; }
+    .sub { color: #b8bdd6; margin: 0 0 14px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .big { font-size: 2.25rem; font-weight: 750; letter-spacing: 0.5px; }
+    .big2 { font-size: 3rem; font-weight: 800; letter-spacing: 0.5px; }
+    button, select { font: inherit; }
+    .break { flex-basis: 100%; height: 0; }
+    .btn {
+      border: 1px solid #2b3053;
+      background: #1b1f33;
+      color: #f5f6fa;
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      min-width: 90px;
+    }
+    .btn:focus { outline: 3px solid #6ea8ff; outline-offset: 2px; }
+    .btn:active { transform: translateY(1px); }
+    .btn.secondary { background: transparent; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .muted { color: #b8bdd6; }
+    .total { display: grid; gap: 6px; }
+    .total .big { line-height: 1.0; }
+    .small { font-size: 0.9rem; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 999px;
+      border: 1px solid #2b3053; background: #101325;
+    }
+    .statusActive { color: #9dffa9; font-weight: 650; }
+    .statusInactive { color: #ffb3b3; font-weight: 650; }
+    .timerBox { display: grid; gap: 8px; }
+    .timerMeta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .divider { height: 1px; background: #242845; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>REBUILT (2026) – Driver Practice Counter (Match-Timed)</h1>
+      <p class="sub">AUTO (0:20) → TELEOP (2:20 with shifts). Fuel points only count when your HUB is active.</p>
+
+      <!-- TIMER / SETTINGS -->
+      <section class="card" aria-labelledby="timerTitle">
+        <div class="row">
+          <h2 id="timerTitle" style="margin:0;">Match Timer</h2>
+          <div class="controls" aria-label="Timer controls">
+            <button class="btn" id="startPause">Start</button>
+            <button class="btn secondary" id="resetTimer">Reset Timer</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="grid">
+          <div class="timerBox">
+            <div class="muted small">Arena timer</div>
+            <div class="big2 mono" id="arenaTime" aria-live="polite">0:20</div>
+
+            <div class="timerMeta">
+              <span class="pill">
+                <span class="muted small">Phase:</span>
+                <span class="mono" id="phaseLabel">AUTO</span>
+              </span>
+
+              <span class="pill">
+                <span class="muted small">Your HUB:</span>
+                <span id="hubStatus" class="statusActive">Active</span>
+              </span>
+
+              <span class="pill">
+                <span class="muted small">Shift:</span>
+                <span class="mono" id="shiftLabel">—</span>
+              </span>
+            </div>
+
+            <p class="muted small" id="phaseNote" style="margin:6px 0 0;"></p>
+          </div>
+
+          <div>
+            <div class="row" style="align-items:flex-end;">
+              <div>
+                <div class="muted small">During SHIFT 1, your alliance HUB is…</div>
+                <select id="shift1Setting" class="btn" aria-label="Shift 1 hub active setting">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <button class="btn secondary" id="applySettings">Apply</button>
+            </div>
+
+            <p class="muted small" style="margin:10px 0 0;">
+              In the real match, this ordering depends on who scored more FUEL in AUTO and then alternates each SHIFT.
+              (This control just lets you simulate either case.)
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid">
+        <!-- FUEL -->
+        <section class="card" aria-labelledby="fuelTitle">
+          <div class="row">
+            <h2 id="fuelTitle" style="margin:0;">Fuel</h2>
+            <span class="pill">
+              <span class="muted small">Scoring right now:</span>
+              <span id="scoringNow" class="statusActive">Yes</span>
+            </span>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <div>
+              <div class="muted small">Fuel scored (count)</div>
+              <div class="big mono" id="fuelCount">0</div>
+              <div class="muted small" style="margin-top:6px;">Fuel points earned</div>
+              <div class="big mono" id="fuelPts">0</div>
+            </div>
+
+            <div class="controls" aria-label="Fuel controls">
+              <button class="btn" id="fuelPlus1" aria-label="Increase fuel scored by 1">+1</button>
+              <button class="btn" id="fuelPlus5" aria-label="Increase fuel scored by 5">+5</button>
+              <button class="btn" id="fuelPlus10" aria-label="Increase fuel scored by 10">+10</button>
+
+            <span class="break" aria-hidden="true"></span>
+
+            <button class="btn" id="fuelMinus1" aria-label="Decrease fuel scored by 1">–1</button>
+              <button class="btn" id="fuelMinus5" aria-label="Decrease fuel scored by 5">–5</button>
+              <button class="btn" id="fuelMinus10" aria-label="Decrease fuel scored by 10">–10</button>
+
+              <button class="btn secondary" id="fuelClear" aria-label="Reset fuel counters">Reset Fuel</button>
+            </div>
+          </div>
+
+          <p class="muted small" style="margin:12px 0 0;">
+            Fuel count always changes. Fuel <em>points</em> only change when your HUB is active for the current phase.
+          </p>
+        </section>
+
+        <!-- CLIMB -->
+        <section class="card" aria-labelledby="climbTitle">
+          <h2 id="climbTitle" style="margin:0;">Climb (Tower)</h2>
+
+          <div class="row" style="margin-top:12px;">
+            <label for="autoClimb" class="muted small">AUTO climb</label>
+            <select id="autoClimb" class="btn" aria-label="Auto climb level">
+              <option value="0">None</option>
+              <option value="L1">Level 1 (15)</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <label for="teleopClimb" class="muted small">TELEOP climb</label>
+            <select id="teleopClimb" class="btn" aria-label="Teleop climb level">
+              <option value="0">None</option>
+              <option value="L1">Level 1 (10)</option>
+              <option value="L2">Level 2 (20)</option>
+              <option value="L3">Level 3 (30)</option>
+            </select>
+          </div>
+
+          <p class="muted small" style="margin:12px 0 0;">
+            (Manual values: AUTO L1=15; TELEOP L1=10, L2=20, L3=30.)
+          </p>
+        </section>
+      </div>
+
+      <!-- SCORE -->
+      <section class="card" aria-labelledby="scoreTitle">
+        <div class="row">
+          <h2 id="scoreTitle" style="margin:0;">Score</h2>
+          <button class="btn secondary" id="resetAll">Reset All</button>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div class="total">
+            <div class="muted small">Climb points</div>
+            <div class="big mono" id="climbPts">0</div>
+          </div>
+          <div class="total">
+            <div class="muted small">Total match points (this robot)</div>
+            <div class="big mono" id="totalPts">0</div>
+          </div>
+        </div>
+
+        <div class="muted small" id="note" style="margin-top:10px;"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Match structure (per 2026 manual section 6.4 / 6.4.1):
+    // AUTO: 0:20 -> 0:00 (20s)
+    // TELEOP starts at 2:20 (140s) and counts down:
+    //   TRANSITION SHIFT: 2:20 -> 2:10 (10s)
+    //   SHIFT 1..4: 25s each
+    //   END GAME: 0:30 -> 0:00 (30s)
+    //
+    // HUB active rules:
+    // - Both HUBS active during AUTO, TRANSITION SHIFT, END GAME.
+    // - During SHIFT 1..4 only one HUB active; it alternates each SHIFT.
+    // - Ordering depends on AUTO result; we simulate it with "SHIFT 1: Active/Inactive" for your alliance.
+
+    const SCORE = {
+      fuelPointEach: 1,
+      auto: { "0": 0, "L1": 15 },
+      teleop: { "0": 0, "L1": 10, "L2": 20, "L3": 30 },
+    };
+
+    const TIMING = {
+      autoSeconds: 20,
+      teleopSeconds: 140,
+      transitionSeconds: 10,
+      shiftSeconds: 25,
+      shiftCount: 4,
+      endgameSeconds: 30,
+      totalSeconds: 160, // 20 + 140
+    };
+
+    const els = {
+      // timer
+      startPause: document.getElementById("startPause"),
+      resetTimer: document.getElementById("resetTimer"),
+      arenaTime: document.getElementById("arenaTime"),
+      phaseLabel: document.getElementById("phaseLabel"),
+      hubStatus: document.getElementById("hubStatus"),
+      shiftLabel: document.getElementById("shiftLabel"),
+      phaseNote: document.getElementById("phaseNote"),
+      shift1Setting: document.getElementById("shift1Setting"),
+      applySettings: document.getElementById("applySettings"),
+
+      // fuel
+      fuelCount: document.getElementById("fuelCount"),
+      fuelPts: document.getElementById("fuelPts"),
+      scoringNow: document.getElementById("scoringNow"),
+
+      fuelMinus10: document.getElementById("fuelMinus10"),
+      fuelMinus5: document.getElementById("fuelMinus5"),
+      fuelMinus1: document.getElementById("fuelMinus1"),
+      fuelPlus1: document.getElementById("fuelPlus1"),
+      fuelPlus5: document.getElementById("fuelPlus5"),
+      fuelPlus10: document.getElementById("fuelPlus10"),
+      fuelClear: document.getElementById("fuelClear"),
+
+      // climb/score
+      autoClimb: document.getElementById("autoClimb"),
+      teleopClimb: document.getElementById("teleopClimb"),
+      climbPts: document.getElementById("climbPts"),
+      totalPts: document.getElementById("totalPts"),
+      resetAll: document.getElementById("resetAll"),
+      note: document.getElementById("note"),
+    };
+
+    const STORAGE_KEY = "frc2026_practice_counter_v2_timed";
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function fmtTimeMMSS(totalSeconds) {
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return {
+            // fuelEvents: array of booleans: true if that fuel scored during an active window (earned points)
+            fuelEvents: [],
+            autoClimb: "0",
+            teleopClimb: "0",
+
+            // timer
+            timeLeft: TIMING.totalSeconds,
+            running: false,
+
+            // sim setting: is your HUB active in SHIFT 1?
+            shift1ActiveForUs: true,
+          };
+        }
+
+        const s = JSON.parse(raw);
+
+        const fuelEvents = Array.isArray(s.fuelEvents)
+          ? s.fuelEvents.filter(v => typeof v === "boolean").slice(0, 9999)
+          : [];
+
+        return {
+          fuelEvents,
+          autoClimb: (s.autoClimb in SCORE.auto) ? s.autoClimb : "0",
+          teleopClimb: (s.teleopClimb in SCORE.teleop) ? s.teleopClimb : "0",
+          timeLeft: Number.isFinite(s.timeLeft) ? clamp(Math.trunc(s.timeLeft), 0, TIMING.totalSeconds) : TIMING.totalSeconds,
+          running: !!s.running,
+          shift1ActiveForUs: (typeof s.shift1ActiveForUs === "boolean") ? s.shift1ActiveForUs : true,
+        };
+      } catch {
+        return {
+          fuelEvents: [],
+          autoClimb: "0",
+          teleopClimb: "0",
+          timeLeft: TIMING.totalSeconds,
+          running: false,
+          shift1ActiveForUs: true,
+        };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    // ---- Phase logic ----
+    function getPhaseInfo(timeLeft) {
+      // timeLeft counts down from 160 -> 0
+      if (timeLeft > TIMING.teleopSeconds) {
+        // AUTO portion; displayed as 0:20..0:01
+        const autoLeft = timeLeft - TIMING.teleopSeconds; // 20..1
+        return {
+          phase: "AUTO",
+          arenaDisplay: `0:${String(autoLeft).padStart(2, "0")}`,
+          hubActiveForUs: true,
+          shift: null,
+          note: "Both HUBs active in AUTO.",
+        };
+      }
+
+      // TELEOP / TRANSITION / SHIFTS / ENDGAME portion
+      const teleopLeft = timeLeft; // 140..0, displayed mm:ss
+      const arenaDisplay = fmtTimeMMSS(teleopLeft);
+
+      if (teleopLeft > (TIMING.teleopSeconds - TIMING.transitionSeconds)) {
+        // 140..131 => transition
+        return {
+          phase: "TRANSITION SHIFT",
+          arenaDisplay,
+          hubActiveForUs: true,
+          shift: null,
+          note: "Both HUBs active in TRANSITION SHIFT.",
+        };
+      }
+
+      // Alliance shifts and endgame
+      if (teleopLeft <= TIMING.endgameSeconds) {
+        return {
+          phase: "END GAME",
+          arenaDisplay,
+          hubActiveForUs: true,
+          shift: null,
+          note: "Both HUBs active in END GAME.",
+        };
+      }
+
+      // Determine which shift (SHIFT 1..4)
+      // SHIFT 1: 2:10–1:45 => 130..106 (start at 130, next at 105)
+      // SHIFT 2: 1:45–1:20 => 105..81
+      // SHIFT 3: 1:20–0:55 => 80..56
+      // SHIFT 4: 0:55–0:30 => 55..31
+      let shift = null;
+      if (teleopLeft <= 130 && teleopLeft > 105) shift = 1;
+      else if (teleopLeft <= 105 && teleopLeft > 80) shift = 2;
+      else if (teleopLeft <= 80 && teleopLeft > 55) shift = 3;
+      else if (teleopLeft <= 55 && teleopLeft > 30) shift = 4;
+      else shift = 4; // fallback (shouldn't hit)
+
+      const activeInShift1 = state.shift1ActiveForUs;
+      const hubActiveForUs = (shift % 2 === 1) ? activeInShift1 : !activeInShift1;
+
+      return {
+        phase: `SHIFT ${shift}`,
+        arenaDisplay,
+        hubActiveForUs,
+        shift,
+        note: "Only one alliance HUB is active during SHIFTS; it alternates each SHIFT.",
+      };
+    }
+
+    // ---- Scoring derived from event history ----
+    function getFuelCount() {
+      return state.fuelEvents.length;
+    }
+
+    function getFuelPoints() {
+      // Each event that happened during active window is worth 1 point
+      let pts = 0;
+      for (const earned of state.fuelEvents) if (earned) pts += SCORE.fuelPointEach;
+      return pts;
+    }
+
+    function getClimbPoints() {
+      return SCORE.auto[state.autoClimb] + SCORE.teleop[state.teleopClimb];
+    }
+
+    // ---- Render ----
+    function render() {
+      // timer & phase
+      const info = getPhaseInfo(state.timeLeft);
+
+      els.arenaTime.textContent = info.arenaDisplay;
+      els.phaseLabel.textContent = info.phase;
+      els.phaseNote.textContent = info.note;
+
+      els.shiftLabel.textContent = info.shift ? String(info.shift) : "—";
+
+      els.hubStatus.textContent = info.hubActiveForUs ? "Active" : "Inactive";
+      els.hubStatus.className = info.hubActiveForUs ? "statusActive" : "statusInactive";
+
+      els.scoringNow.textContent = info.hubActiveForUs ? "Yes" : "No";
+      els.scoringNow.className = info.hubActiveForUs ? "statusActive" : "statusInactive";
+
+      // controls text
+      els.startPause.textContent = state.running ? "Pause" : "Start";
+
+      // settings dropdown
+      els.shift1Setting.value = state.shift1ActiveForUs ? "active" : "inactive";
+
+      // counters
+      const fuelCount = getFuelCount();
+      const fuelPts = getFuelPoints();
+      const climbPts = getClimbPoints();
+      const total = fuelPts + climbPts;
+
+      els.fuelCount.textContent = String(fuelCount);
+      els.fuelPts.textContent = String(fuelPts);
+      els.climbPts.textContent = String(climbPts);
+      els.totalPts.textContent = String(total);
+
+      // little note
+      if (info.shift) {
+        els.note.textContent = info.hubActiveForUs
+          ? `You can score right now (SHIFT ${info.shift}).`
+          : `Your HUB is inactive right now (SHIFT ${info.shift}) — fuel will count but won't score points.`;
+      } else {
+        els.note.textContent = "";
+      }
+
+      saveState();
+    }
+
+    // ---- Fuel events: plus adds events, minus undoes most recent events ----
+    function addFuel(n) {
+      const info = getPhaseInfo(state.timeLeft);
+      const willScore = !!info.hubActiveForUs; // true if hub active in this phase
+      for (let i = 0; i < n; i++) {
+        if (state.fuelEvents.length >= 9999) break;
+        state.fuelEvents.push(willScore);
+      }
+      render();
+    }
+
+    function removeFuel(n) {
+      for (let i = 0; i < n; i++) {
+        if (state.fuelEvents.length === 0) break;
+        state.fuelEvents.pop();
+      }
+      render();
+    }
+
+    // ---- Timer ----
+    let intervalId = null;
+    let lastTickMs = null;
+
+    function stopTimer() {
+      state.running = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      lastTickMs = null;
+      render();
+    }
+
+    function startTimer() {
+      if (state.timeLeft <= 0) state.timeLeft = TIMING.totalSeconds;
+      state.running = true;
+      lastTickMs = Date.now();
+
+      if (!intervalId) {
+        intervalId = setInterval(() => {
+          if (!state.running) return;
+
+          const now = Date.now();
+          const elapsed = Math.floor((now - lastTickMs) / 1000);
+          if (elapsed <= 0) return;
+
+          lastTickMs += elapsed * 1000;
+          state.timeLeft = clamp(state.timeLeft - elapsed, 0, TIMING.totalSeconds);
+
+          // auto-stop at end
+          if (state.timeLeft === 0) stopTimer();
+          else render();
+        }, 250);
+      }
+
+      render();
+    }
+
+    // ---- Events ----
+    els.startPause.addEventListener("click", () => {
+      if (state.running) stopTimer();
+      else startTimer();
+    });
+
+    els.resetTimer.addEventListener("click", () => {
+      stopTimer();
+      state.timeLeft = TIMING.totalSeconds;
+      render();
+    });
+
+    els.applySettings.addEventListener("click", () => {
+      state.shift1ActiveForUs = (els.shift1Setting.value === "active");
+      render();
+    });
+
+    // fuel
+    function bumpFuel(delta) {
+      if (delta > 0) addFuel(delta);
+      else if (delta < 0) removeFuel(Math.abs(delta));
+    }
+
+    els.fuelPlus1.addEventListener("click", () => bumpFuel(1));
+    els.fuelPlus5.addEventListener("click", () => bumpFuel(5));
+    els.fuelPlus10.addEventListener("click", () => bumpFuel(10));
+
+    els.fuelMinus1.addEventListener("click", () => bumpFuel(-1));
+    els.fuelMinus5.addEventListener("click", () => bumpFuel(-5));
+    els.fuelMinus10.addEventListener("click", () => bumpFuel(-10));
+
+    els.fuelClear.addEventListener("click", () => {
+      state.fuelEvents = [];
+      render();
+    });
+
+    // climbs
+    els.autoClimb.addEventListener("change", () => { state.autoClimb = els.autoClimb.value; render(); });
+    els.teleopClimb.addEventListener("change", () => { state.teleopClimb = els.teleopClimb.value; render(); });
+
+    // reset all
+    els.resetAll.addEventListener("click", () => {
+      stopTimer();
+      state = {
+        fuelEvents: [],
+        autoClimb: "0",
+        teleopClimb: "0",
+        timeLeft: TIMING.totalSeconds,
+        running: false,
+        shift1ActiveForUs: true,
+      };
+      render();
+    });
+
+    // initial paint
+    render();
+  </script>
+</body>
+</html>

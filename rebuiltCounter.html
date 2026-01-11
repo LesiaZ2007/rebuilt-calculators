@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FRC 2026 REBUILT – Practice Counter</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0c10; color: #f5f6fa; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 20px; }
+    .card { background: #141621; border: 1px solid #242845; border-radius: 16px; padding: 16px; margin: 14px 0; }
+    h1 { font-size: 1.25rem; margin: 0 0 6px; }
+    .sub { color: #b8bdd6; margin: 0 0 14px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .big { font-size: 2.25rem; font-weight: 750; letter-spacing: 0.5px; }
+    button, select {
+      font: inherit;
+    }
+    .btn {
+      border: 1px solid #2b3053;
+      background: #1b1f33;
+      color: #f5f6fa;
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      min-width: 90px;
+    }
+    .btn:focus { outline: 3px solid #6ea8ff; outline-offset: 2px; }
+    .btn:active { transform: translateY(1px); }
+    .btn.secondary { background: transparent; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .muted { color: #b8bdd6; }
+    .total { display: grid; gap: 6px; }
+    .total .big { line-height: 1.0; }
+    .small { font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>REBUILT (2026) – Driver Practice Counter</h1>
+      <p class="sub">Fast +/– buttons, climb picker, and live score. Autosaves on this device.</p>
+
+      <div class="grid">
+        <section class="card" aria-labelledby="fuelTitle">
+          <div class="row">
+            <h2 id="fuelTitle" style="margin:0;">Fuel</h2>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <div>
+              <div class="muted small">Fuel scored (count)</div>
+              <div class="big mono" id="fuelCount">0</div>
+            </div>
+
+            <div class="controls" aria-label="Fuel controls">
+              <button class="btn" id="fuelPlus1" aria-label="Increase fuel scored by 1">+1</button>
+              <button class="btn" id="fuelPlus5" aria-label="Increase fuel scored by 5">+5</button>
+              <button class="btn" id="fuelPlus10" aria-label="Increase fuel scored by 10">+10</button>
+
+              <button class="btn" id="fuelMinus1" aria-label="Decrease fuel scored by 1">–1</button>
+              <button class="btn" id="fuelMinus5" aria-label="Decrease fuel scored by 5">–5</button>
+              <button class="btn" id="fuelMinus10" aria-label="Decrease fuel scored by 10">–10</button>
+
+              <button class="btn secondary" id="fuelClear" aria-label="Reset fuel to zero">Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="climbTitle">
+          <h2 id="climbTitle" style="margin:0;">Climb (Tower)</h2>
+
+          <div class="row" style="margin-top:12px;">
+            <label for="autoClimb" class="muted small">AUTO climb</label>
+            <select id="autoClimb" class="btn" aria-label="Auto climb level">
+              <option value="0">None</option>
+              <option value="L1">Level 1 (15)</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <label for="teleopClimb" class="muted small">TELEOP climb</label>
+            <select id="teleopClimb" class="btn" aria-label="Teleop climb level">
+              <option value="0">None</option>
+              <option value="L1">Level 1 (10)</option>
+              <option value="L2">Level 2 (20)</option>
+              <option value="L3">Level 3 (30)</option>
+            </select>
+          </div>
+
+          <p class="muted small" style="margin:12px 0 0;">
+            (Manual values: AUTO L1=15; TELEOP L1=10, L2=20, L3=30.)
+          </p>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="scoreTitle">
+        <div class="row">
+          <h2 id="scoreTitle" style="margin:0;">Score</h2>
+          <button class="btn secondary" id="resetAll">Reset All</button>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div class="total">
+            <div class="muted small">Fuel points</div>
+            <div class="big mono" id="fuelPts">0</div>
+          </div>
+          <div class="total">
+            <div class="muted small">Climb points</div>
+            <div class="big mono" id="climbPts">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="muted small">Total match points (this robot)</div>
+          <div class="big mono" id="totalPts">0</div>
+          <div class="muted small" id="note"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Fuel is counted as 1 point each (no hub state logic here).
+    // Tower: AUTO L1=15. TELEOP L1=10, L2=20, L3=30.
+    const SCORE = {
+      fuel: 1,
+      auto: { "0": 0, "L1": 15 },
+      teleop: { "0": 0, "L1": 10, "L2": 20, "L3": 30 },
+    };
+
+    const els = {
+      fuelCount: document.getElementById("fuelCount"),
+      fuelMinus10: document.getElementById("fuelMinus10"),
+      fuelMinus5: document.getElementById("fuelMinus5"),
+      fuelMinus1: document.getElementById("fuelMinus1"),
+      fuelPlus1: document.getElementById("fuelPlus1"),
+      fuelPlus5: document.getElementById("fuelPlus5"),
+      fuelPlus10: document.getElementById("fuelPlus10"),
+
+      fuelClear: document.getElementById("fuelClear"),
+      autoClimb: document.getElementById("autoClimb"),
+      teleopClimb: document.getElementById("teleopClimb"),
+      fuelPts: document.getElementById("fuelPts"),
+      climbPts: document.getElementById("climbPts"),
+      totalPts: document.getElementById("totalPts"),
+      resetAll: document.getElementById("resetAll"),
+      note: document.getElementById("note"),
+    };
+
+    const STORAGE_KEY = "frc2026_practice_counter_v1";
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { fuel: 0, autoClimb: "0", teleopClimb: "0" };
+        const s = JSON.parse(raw);
+        return {
+          fuel: Number.isFinite(s.fuel) ? clamp(Math.trunc(s.fuel), 0, 9999) : 0,
+          autoClimb: (s.autoClimb in SCORE.auto) ? s.autoClimb : "0",
+          teleopClimb: (s.teleopClimb in SCORE.teleop) ? s.teleopClimb : "0",
+        };
+      } catch {
+        return { fuel: 0, autoClimb: "0", teleopClimb: "0" };
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    function render() {
+      els.fuelCount.textContent = String(state.fuel);
+      els.autoClimb.value = state.autoClimb;
+      els.teleopClimb.value = state.teleopClimb;
+
+      const fuelPoints = state.fuel * SCORE.fuel;
+      const climbPoints = SCORE.auto[state.autoClimb] + SCORE.teleop[state.teleopClimb];
+      const total = fuelPoints + climbPoints;
+
+      els.fuelPts.textContent = String(fuelPoints);
+      els.climbPts.textContent = String(climbPoints);
+      els.totalPts.textContent = String(total);
+
+      els.note.textContent = ""; // no hub state note
+
+      saveState(state);
+    }
+
+    function bumpFuel(delta) {
+      state.fuel = clamp(state.fuel + delta, 0, 9999);
+      render();
+    }
+
+    // Events
+    els.fuelMinus10.addEventListener("click", () => bumpFuel(-10));
+    els.fuelMinus5.addEventListener("click", () => bumpFuel(-5));
+    els.fuelMinus1.addEventListener("click", () => bumpFuel(-1));
+
+    els.fuelPlus1.addEventListener("click", () => bumpFuel(1));
+    els.fuelPlus5.addEventListener("click", () => bumpFuel(5));
+    els.fuelPlus10.addEventListener("click", () => bumpFuel(10));
+
+    els.fuelClear.addEventListener("click", () => { state.fuel = 0; render(); });
+
+    els.autoClimb.addEventListener("change", () => { state.autoClimb = els.autoClimb.value; render(); });
+    els.teleopClimb.addEventListener("change", () => { state.teleopClimb = els.teleopClimb.value; render(); });
+
+    els.resetAll.addEventListener("click", () => {
+      state = { fuel: 0, autoClimb: "0", teleopClimb: "0" };
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

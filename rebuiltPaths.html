@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FRC 2026 REBUILT – Field Path Time Mapper</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0c10; color: #f5f6fa; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .card { background: #141621; border: 1px solid #242845; border-radius: 16px; padding: 14px; margin: 12px 0; }
+    h1 { font-size: 1.15rem; margin: 0 0 6px; }
+    h2 { font-size: 1.0rem; margin: 0 0 10px; }
+    .sub { color: #b8bdd6; margin: 0 0 10px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 999px;
+      border: 1px solid #2b3053; background: #101325;
+    }
+    label { color: #d7dbef; }
+    input, button { font: inherit; }
+    input[type="number"] {
+      width: 110px;
+      background: #0f1220;
+      border: 1px solid #2b3053;
+      color: #f5f6fa;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .btn {
+      border: 1px solid #2b3053;
+      background: #1b1f33;
+      color: #f5f6fa;
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    .btn.secondary { background: transparent; }
+    .btn:focus { outline: 3px solid #6ea8ff; outline-offset: 2px; }
+    .btn:active { transform: translateY(1px); }
+    .muted { color: #b8bdd6; }
+    .small { font-size: 0.9rem; }
+    .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+    /* BIG FIELD AREA */
+    .canvasWrap {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #242845;
+      background: #0f1220;
+      height: min(78vh, 860px);
+      min-height: 520px;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .hint {
+      position: absolute; left: 12px; bottom: 12px;
+      background: rgba(10,12,18,0.65);
+      border: 1px solid rgba(90,100,150,0.35);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      color: #dfe3ff;
+      user-select: none;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #242845; padding: 8px 6px; text-align: left; vertical-align: top; }
+    th { color: #d7dbef; font-weight: 650; }
+    td { color: #f5f6fa; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .kpi { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+    @media (max-width: 900px) { .kpi { grid-template-columns: repeat(2, minmax(140px, 1fr)); } }
+    .kpi .box { border: 1px solid #242845; border-radius: 14px; padding: 10px; background: #101325; }
+    .kpi .big { font-size: 1.5rem; font-weight: 750; }
+    .kpi .lbl { color: #b8bdd6; font-size: 0.9rem; }
+
+    .pointsList input[type="number"] { width: 90px; padding: 8px 10px; border-radius: 10px; }
+
+    /* Segment speed inputs */
+    .segSpeed {
+      width: 90px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>REBUILT (2026) – Field Path Time Mapper</h1>
+      <p class="sub">
+        Click to place waypoints. Drag to adjust. Shows distance/time per segment.
+        You can set a different robot speed for each segment.
+      </p>
+    </div>
+
+    <!-- SETTINGS / CONTROLS -->
+    <section class="card" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Settings</h2>
+      <div class="row">
+        <div class="controls">
+          <label class="pill">
+            <span class="muted small">Default speed (ft/s)</span>
+            <input id="speed" type="number" min="0.1" step="0.1" value="15" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Shooting rate (balls/s)</span>
+            <input id="bps" type="number" min="0.1" step="0.1" value="10" />
+          </label>
+
+          <span class="pill">
+            <input id="askShots" type="checkbox" />
+            <label for="askShots">Ask for shots at each stop</label>
+          </span>
+
+          <label class="pill">
+            <span class="muted small">Field length (ft)</span>
+            <input id="fieldL" type="number" min="1" step="0.01" />
+          </label>
+
+          <label class="pill">
+            <span class="muted small">Field width (ft)</span>
+            <input id="fieldW" type="number" min="1" step="0.01" />
+          </label>
+        </div>
+
+        <div class="controls">
+          <label class="pill">
+            <span class="muted small">Field image</span>
+            <input id="imgFile" type="file" accept="image/*" />
+          </label>
+
+          <button class="btn" id="fullscreen">Fullscreen</button>
+          <button class="btn" id="undo">Undo</button>
+          <button class="btn secondary" id="clear">Clear Path</button>
+          <button class="btn secondary" id="resetAll">Reset All</button>
+        </div>
+      </div>
+
+      <p class="muted small" style="margin:10px 0 0;">
+        Segment speeds default to the “Default speed” value when you create a segment.
+        You can override each segment in the breakdown table.
+      </p>
+    </section>
+
+    <!-- FIELD -->
+    <section class="card">
+      <h2>Field</h2>
+      <div class="canvasWrap" id="canvasWrap">
+        <canvas id="field"></canvas>
+        <div class="hint">
+          <div><strong>Click</strong> add point • <strong>Drag</strong> move • <strong>Shift+Click</strong> delete</div>
+          <div class="muted small">Shots (if enabled) are attached to the waypoint you stop at.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOTALS + WAYPOINTS -->
+    <section class="card">
+      <h2>Totals</h2>
+      <div class="kpi">
+        <div class="box">
+          <div class="lbl">Drive distance</div>
+          <div class="big mono" id="totDist">0.00 ft</div>
+        </div>
+        <div class="box">
+          <div class="lbl">Drive time</div>
+          <div class="big mono" id="totDrive">0.00 s</div>
+        </div>
+        <div class="box">
+          <div class="lbl">Shoot time</div>
+          <div class="big mono" id="totShoot">0.00 s</div>
+        </div>
+        <div class="box">
+          <div class="lbl">Total time</div>
+          <div class="big mono" id="totTime">0.00 s</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card pointsList">
+      <h2>Waypoints</h2>
+      <div id="pointsUI" class="muted small">Click the field to add points.</div>
+    </section>
+
+    <!-- SIMPLE BREAKDOWN (NO MATH) -->
+    <section class="card">
+      <h2>Segment breakdown</h2>
+      <p class="muted small" style="margin-top:-4px;">
+        Each row uses its own speed: <span class="mono">drive_time = distance / segment_speed</span>.
+      </p>
+      <div style="overflow:auto;">
+        <table aria-label="Segment breakdown">
+          <thead>
+            <tr>
+              <th>Segment</th>
+              <th class="num">Speed (ft/s)</th>
+              <th class="num">Distance (ft)</th>
+              <th class="num">Drive time (s)</th>
+              <th class="num">Balls @ end</th>
+              <th class="num">Shoot time (s)</th>
+              <th class="num">Segment total (s)</th>
+            </tr>
+          </thead>
+          <tbody id="segBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Default FIELD boundary from 2026 manual (inches -> feet)
+    const DEFAULT_FIELD_W_FT = 317.7 / 12; // ~26.475
+    const DEFAULT_FIELD_L_FT = 651.2 / 12; // ~54.267
+
+    const STORAGE_KEY = "frc2026_field_mapper_v3_segment_speeds";
+    const canvas = document.getElementById("field");
+    const ctx = canvas.getContext("2d");
+
+    const els = {
+      imgFile: document.getElementById("imgFile"),
+      undo: document.getElementById("undo"),
+      clear: document.getElementById("clear"),
+      resetAll: document.getElementById("resetAll"),
+      fullscreen: document.getElementById("fullscreen"),
+      canvasWrap: document.getElementById("canvasWrap"),
+
+      speed: document.getElementById("speed"),
+      bps: document.getElementById("bps"),
+      askShots: document.getElementById("askShots"),
+      fieldL: document.getElementById("fieldL"),
+      fieldW: document.getElementById("fieldW"),
+
+      totDist: document.getElementById("totDist"),
+      totDrive: document.getElementById("totDrive"),
+      totShoot: document.getElementById("totShoot"),
+      totTime: document.getElementById("totTime"),
+
+      pointsUI: document.getElementById("pointsUI"),
+      segBody: document.getElementById("segBody"),
+    };
+
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const fmt = (n, d=2) => Number.isFinite(n) ? n.toFixed(d) : "—";
+
+    let fieldImg = new Image();
+    let hasImage = false;
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return freshState();
+        const s = JSON.parse(raw);
+
+        const points = Array.isArray(s.points) ? s.points.map(p => ({
+          xPx: Number(p.xPx) || 0,
+          yPx: Number(p.yPx) || 0,
+          balls: Math.max(0, Math.trunc(Number(p.balls) || 0)),
+        })) : [];
+
+        const segmentSpeeds = Array.isArray(s.segmentSpeeds)
+          ? s.segmentSpeeds.map(v => (Number(v) > 0 ? Number(v) : null))
+          : [];
+
+        // normalize length
+        normalizeSegmentSpeeds(points, segmentSpeeds, Number(s.speed) > 0 ? Number(s.speed) : 15);
+
+        return {
+          points,
+          segmentSpeeds,
+          speed: Number(s.speed) > 0 ? Number(s.speed) : 15,
+          bps: Number(s.bps) > 0 ? Number(s.bps) : 10,
+          askShots: !!s.askShots,
+          fieldL: Number(s.fieldL) > 0 ? Number(s.fieldL) : DEFAULT_FIELD_L_FT,
+          fieldW: Number(s.fieldW) > 0 ? Number(s.fieldW) : DEFAULT_FIELD_W_FT,
+        };
+      } catch {
+        return freshState();
+      }
+    }
+
+    function freshState() {
+      return {
+        points: [],
+        segmentSpeeds: [], // one per segment (points.length - 1)
+        speed: 15,
+        bps: 10,
+        askShots: false,
+        fieldL: DEFAULT_FIELD_L_FT,
+        fieldW: DEFAULT_FIELD_W_FT,
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function hydrateInputsFromState() {
+      els.speed.value = String(state.speed);
+      els.bps.value = String(state.bps);
+      els.askShots.checked = state.askShots;
+      els.fieldL.value = String(state.fieldL.toFixed(4));
+      els.fieldW.value = String(state.fieldW.toFixed(4));
+    }
+
+    // Ensure segmentSpeeds has exactly points.length-1 entries.
+    function normalizeSegmentSpeeds(points, segmentSpeeds, defaultSpeed) {
+      const need = Math.max(0, points.length - 1);
+      while (segmentSpeeds.length < need) segmentSpeeds.push(defaultSpeed);
+      while (segmentSpeeds.length > need) segmentSpeeds.pop();
+      // Replace invalids with default
+      for (let i = 0; i < segmentSpeeds.length; i++) {
+        if (!(Number(segmentSpeeds[i]) > 0)) segmentSpeeds[i] = defaultSpeed;
+      }
+    }
+
+    // Crisp canvas sizing
+    function resizeCanvasToCSS() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+      render();
+    }
+    window.addEventListener("resize", resizeCanvasToCSS);
+
+    // Field rect inside canvas (keeps correct aspect = fieldL/fieldW)
+    function getFieldRect() {
+      const rect = canvas.getBoundingClientRect();
+      const aspect = state.fieldL / state.fieldW; // length / width
+      const canvasAspect = rect.width / rect.height;
+
+      let w, h, x, y;
+      if (canvasAspect > aspect) {
+        h = rect.height;
+        w = h * aspect;
+        x = (rect.width - w) / 2;
+        y = 0;
+      } else {
+        w = rect.width;
+        h = w / aspect;
+        x = 0;
+        y = (rect.height - h) / 2;
+      }
+      return { x, y, w, h };
+    }
+
+    function pxToFt(dxPx, dyPx) {
+      const fr = getFieldRect();
+      const ftPerPxX = state.fieldL / fr.w;
+      const ftPerPxY = state.fieldW / fr.h;
+      return { xFt: dxPx * ftPerPxX, yFt: dyPx * ftPerPxY };
+    }
+
+    function pointPxToFt(p) {
+      const fr = getFieldRect();
+      const ftPerPxX = state.fieldL / fr.w;
+      const ftPerPxY = state.fieldW / fr.h;
+      return {
+        xFt: (p.xPx - fr.x) * ftPerPxX,
+        yFt: (p.yPx - fr.y) * ftPerPxY
+      };
+    }
+
+    function drawBackground() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      ctx.fillStyle = "#0f1220";
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
+      const fr = getFieldRect();
+
+      if (hasImage) {
+        ctx.drawImage(fieldImg, fr.x, fr.y, fr.w, fr.h);
+        ctx.fillStyle = "rgba(10,12,16,0.25)";
+        ctx.fillRect(fr.x, fr.y, fr.w, fr.h);
+      } else {
+        ctx.fillStyle = "rgba(245,246,250,0.06)";
+        ctx.fillRect(fr.x, fr.y, fr.w, fr.h);
+
+        ctx.fillStyle = "rgba(245,246,250,0.85)";
+        ctx.font = "14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillText("No image loaded — put field.png next to this HTML or upload one.", fr.x + 12, fr.y + 22);
+      }
+
+      ctx.strokeStyle = "rgba(110,168,255,0.35)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fr.x, fr.y, fr.w, fr.h);
+    }
+
+    function drawPath() {
+      if (state.points.length >= 2) {
+        ctx.strokeStyle = "rgba(245,246,250,0.95)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(state.points[0].xPx, state.points[0].yPx);
+        for (let i = 1; i < state.points.length; i++) ctx.lineTo(state.points[i].xPx, state.points[i].yPx);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < state.points.length; i++) {
+        const p = state.points[i];
+        const r = 11;
+
+        ctx.fillStyle = "rgba(110,168,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(p.xPx, p.yPx, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(10,12,16,0.6)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(10,12,16,0.95)";
+        ctx.font = "bold 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(i + 1), p.xPx, p.yPx);
+      }
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+    }
+
+    function computeSegments() {
+      const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+      const bps = Math.max(0.0001, Number(els.bps.value));
+      const askShots = els.askShots.checked;
+
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+
+      let totalDist = 0, totalDrive = 0, totalShoot = 0;
+      const segs = [];
+
+      for (let i = 1; i < state.points.length; i++) {
+        const a = state.points[i - 1];
+        const b = state.points[i];
+
+        const dxPx = b.xPx - a.xPx;
+        const dyPx = b.yPx - a.yPx;
+        const { xFt: dxFt, yFt: dyFt } = pxToFt(dxPx, dyPx);
+
+        const distFt = Math.hypot(dxFt, dyFt);
+
+        const segSpeed = Math.max(0.0001, Number(state.segmentSpeeds[i - 1]) || defaultSpeed);
+        const driveT = distFt / segSpeed;
+
+        const balls = (askShots ? Math.max(0, Math.trunc(Number(b.balls || 0))) : 0);
+        const shootT = (askShots ? balls / bps : 0);
+
+        totalDist += distFt;
+        totalDrive += driveT;
+        totalShoot += shootT;
+
+        segs.push({ i, segSpeed, distFt, driveT, balls, shootT, segT: driveT + shootT });
+      }
+
+      return { segs, totalDist, totalDrive, totalShoot, totalTime: totalDrive + totalShoot };
+    }
+
+    function renderTables() {
+      const { segs, totalDist, totalDrive, totalShoot, totalTime } = computeSegments();
+
+      els.totDist.textContent = `${fmt(totalDist, 2)} ft`;
+      els.totDrive.textContent = `${fmt(totalDrive, 2)} s`;
+      els.totShoot.textContent = `${fmt(totalShoot, 2)} s`;
+      els.totTime.textContent = `${fmt(totalTime, 2)} s`;
+
+      // segments table (with editable speed)
+      els.segBody.innerHTML = "";
+      for (const s of segs) {
+        const tr = document.createElement("tr");
+
+        const segName = document.createElement("td");
+        segName.innerHTML = `<span class="mono">${s.i} → ${s.i + 1}</span>`;
+        tr.appendChild(segName);
+
+        const speedTd = document.createElement("td");
+        speedTd.className = "num";
+        const speedInput = document.createElement("input");
+        speedInput.className = "segSpeed mono";
+        speedInput.type = "number";
+        speedInput.min = "0.1";
+        speedInput.step = "0.1";
+        speedInput.value = String(Number(s.segSpeed).toFixed(1));
+        speedInput.title = "Segment speed (ft/s)";
+        speedInput.addEventListener("change", () => {
+          const v = Number(speedInput.value);
+          const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+          state.segmentSpeeds[s.i - 1] = (v > 0 ? v : defaultSpeed);
+          saveState();
+          render();
+        });
+        speedTd.appendChild(speedInput);
+        tr.appendChild(speedTd);
+
+        const dist = document.createElement("td"); dist.className = "num"; dist.textContent = fmt(s.distFt, 2); tr.appendChild(dist);
+        const dt = document.createElement("td"); dt.className = "num"; dt.textContent = fmt(s.driveT, 2); tr.appendChild(dt);
+        const balls = document.createElement("td"); balls.className = "num"; balls.textContent = String(s.balls); tr.appendChild(balls);
+        const st = document.createElement("td"); st.className = "num"; st.textContent = fmt(s.shootT, 2); tr.appendChild(st);
+        const segT = document.createElement("td"); segT.className = "num"; segT.textContent = fmt(s.segT, 2); tr.appendChild(segT);
+
+        els.segBody.appendChild(tr);
+      }
+
+      // waypoints UI
+      if (state.points.length === 0) {
+        els.pointsUI.textContent = "Click the field to add points.";
+        return;
+      }
+
+      const ask = els.askShots.checked;
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gap = "8px";
+
+      state.points.forEach((p, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.border = "1px solid #242845";
+        row.style.borderRadius = "14px";
+        row.style.padding = "8px 10px";
+        row.style.background = "#101325";
+
+        const ft = pointPxToFt(p);
+        const left = document.createElement("div");
+        left.innerHTML = `
+          <div><strong class="mono">#${idx + 1}</strong></div>
+          <div class="muted small mono">x=${fmt(ft.xFt,2)} ft, y=${fmt(ft.yFt,2)} ft</div>
+        `;
+
+        const right = document.createElement("div");
+        right.className = "controls";
+
+        if (ask && idx > 0) {
+          const lab = document.createElement("label");
+          lab.className = "muted small";
+          lab.textContent = "Balls";
+
+          const inp = document.createElement("input");
+          inp.type = "number";
+          inp.min = "0";
+          inp.step = "1";
+          inp.value = String(p.balls || 0);
+          inp.addEventListener("change", () => {
+            p.balls = Math.max(0, Math.trunc(Number(inp.value) || 0));
+            saveState();
+            render();
+          });
+
+          right.appendChild(lab);
+          right.appendChild(inp);
+        }
+
+        if (idx > 0) {
+          const del = document.createElement("button");
+          del.className = "btn secondary";
+          del.textContent = "Delete";
+          del.addEventListener("click", () => {
+            state.points.splice(idx, 1);
+            const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
+            normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+            saveState();
+            render();
+          });
+          right.appendChild(del);
+        }
+
+        row.appendChild(left);
+        row.appendChild(right);
+        wrap.appendChild(row);
+      });
+
+      els.pointsUI.innerHTML = "";
+      els.pointsUI.appendChild(wrap);
+    }
+
+    function render() {
+      // mirror inputs -> state
+      state.speed = Number(els.speed.value) > 0 ? Number(els.speed.value) : 15;
+      state.bps = Number(els.bps.value) > 0 ? Number(els.bps.value) : 10;
+      state.askShots = els.askShots.checked;
+      state.fieldL = Number(els.fieldL.value) > 0 ? Number(els.fieldL.value) : DEFAULT_FIELD_L_FT;
+      state.fieldW = Number(els.fieldW.value) > 0 ? Number(els.fieldW.value) : DEFAULT_FIELD_W_FT;
+
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, state.speed);
+
+      drawBackground();
+      drawPath();
+      renderTables();
+      saveState();
+    }
+
+    // Pointer handling: add/drag/delete
+    let draggingIdx = -1;
+    const HIT_R = 16;
+
+    function getMousePos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    }
+
+    function hitTest(x, y) {
+      for (let i = state.points.length - 1; i >= 0; i--) {
+        const p = state.points[i];
+        if (Math.hypot(p.xPx - x, p.yPx - y) <= HIT_R) return i;
+      }
+      return -1;
+    }
+
+    function clampToField(x, y) {
+      const fr = getFieldRect();
+      return {
+        x: clamp(x, fr.x, fr.x + fr.w),
+        y: clamp(y, fr.y, fr.y + fr.h),
+      };
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      const { x, y } = getMousePos(e);
+      const idx = hitTest(x, y);
+
+      if (idx !== -1) {
+        if (e.shiftKey && idx > 0) {
+          state.points.splice(idx, 1);
+          normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+          render();
+          return;
+        }
+        draggingIdx = idx;
+        return;
+      }
+
+      const { x: px, y: py } = clampToField(x, y);
+      const newPoint = { xPx: px, yPx: py, balls: 0 };
+
+      if (els.askShots.checked && state.points.length >= 1) {
+        const raw = prompt("Balls to shoot from this stop? (0+)", "0");
+        newPoint.balls = Math.max(0, Math.trunc(Number(raw) || 0));
+      }
+
+      state.points.push(newPoint);
+
+      // Adding a point creates a new segment (if we now have 2+ points)
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+
+      render();
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (draggingIdx === -1) return;
+      const { x, y } = getMousePos(e);
+      const clamped = clampToField(x, y);
+      state.points[draggingIdx].xPx = clamped.x;
+      state.points[draggingIdx].yPx = clamped.y;
+      render();
+    });
+
+    canvas.addEventListener("pointerup", () => { draggingIdx = -1; });
+    canvas.addEventListener("pointercancel", () => { draggingIdx = -1; });
+
+    // Image loading
+    function loadDefaultImage() {
+      fieldImg = new Image();
+      fieldImg.onload = () => { hasImage = true; render(); };
+      fieldImg.onerror = () => { hasImage = false; render(); };
+      fieldImg.src = "field.png";
+    }
+
+    function setImageFromFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      fieldImg = new Image();
+      fieldImg.onload = () => { hasImage = true; URL.revokeObjectURL(url); render(); };
+      fieldImg.src = url;
+    }
+
+    els.imgFile.addEventListener("change", (e) => setImageFromFile(e.target.files?.[0]));
+
+    // Buttons
+    els.undo.addEventListener("click", () => {
+      state.points.pop();
+      normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+      render();
+    });
+
+    els.clear.addEventListener("click", () => {
+      state.points = [];
+      state.segmentSpeeds = [];
+      render();
+    });
+
+    els.resetAll.addEventListener("click", () => {
+      state = freshState();
+      hydrateInputsFromState();
+      render();
+    });
+
+    els.fullscreen.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) await els.canvasWrap.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch {}
+    });
+
+    // Inputs
+    ["input","change"].forEach(ev => {
+      els.speed.addEventListener(ev, () => {
+        // Note: default speed does NOT overwrite existing segment speeds;
+        // it only affects new segments and any invalid speed.
+        render();
+      });
+      els.bps.addEventListener(ev, render);
+      els.askShots.addEventListener(ev, render);
+      els.fieldL.addEventListener(ev, render);
+      els.fieldW.addEventListener(ev, render);
+    });
+
+    // Init
+    hydrateInputsFromState();
+    loadDefaultImage();
+    requestAnimationFrame(resizeCanvasToCSS);
+    render();
+  </script>
+</body>
+</html>
