@@ -1,23 +1,88 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FRC 2026 REBUILT – Practice Counter</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #0b0c10; color: #f5f6fa; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
-    .card { background: #141621; border: 1px solid #242845; border-radius: 16px; padding: 16px; margin: 14px 0; }
-    h1 { font-size: 1.25rem; margin: 0 0 6px; }
-    .sub { color: #b8bdd6; margin: 0 0 14px; }
-    .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
-    @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .big { font-size: 2.25rem; font-weight: 750; letter-spacing: 0.5px; }
-    .big2 { font-size: 3rem; font-weight: 800; letter-spacing: 0.5px; }
-    button, select { font: inherit; }
-    .break { flex-basis: 100%; height: 0; }
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #0b0c10;
+      color: #f5f6fa;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #141621;
+      border: 1px solid #242845;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0 0 6px;
+    }
+
+    .sub {
+      color: #b8bdd6;
+      margin: 0 0 14px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .big {
+      font-size: 2.25rem;
+      font-weight: 750;
+      letter-spacing: 0.5px;
+    }
+
+    .big2 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .break {
+      flex-basis: 100%;
+      height: 0;
+    }
+
     .btn {
       border: 1px solid #2b3053;
       background: #1b1f33;
@@ -27,27 +92,126 @@
       cursor: pointer;
       min-width: 90px;
     }
-    .btn:focus { outline: 3px solid #6ea8ff; outline-offset: 2px; }
-    .btn:active { transform: translateY(1px); }
-    .btn.secondary { background: transparent; }
-    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
-    .mono { font-variant-numeric: tabular-nums; }
-    .muted { color: #b8bdd6; }
-    .total { display: grid; gap: 6px; }
-    .total .big { line-height: 1.0; }
-    .small { font-size: 0.9rem; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 999px;
-      border: 1px solid #2b3053; background: #101325;
+
+    .btn:focus {
+      outline: 3px solid #6ea8ff;
+      outline-offset: 2px;
     }
-    .statusActive { color: #9dffa9; font-weight: 650; }
-    .statusInactive { color: #ffb3b3; font-weight: 650; }
-    .timerBox { display: grid; gap: 8px; }
-    .timerMeta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .divider { height: 1px; background: #242845; margin: 10px 0; }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn.secondary {
+      background: transparent;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mono {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .muted {
+      color: #b8bdd6;
+    }
+
+    .total {
+      display: grid;
+      gap: 6px;
+    }
+
+    .total .big {
+      line-height: 1.0;
+    }
+
+    .small {
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid #2b3053;
+      background: #101325;
+    }
+
+    .statusActive {
+      color: #9dffa9;
+      font-weight: 650;
+    }
+
+    .statusInactive {
+      color: #ffb3b3;
+      font-weight: 650;
+    }
+
+    .timerBox {
+      display: grid;
+      gap: 8px;
+    }
+
+    .timerMeta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .divider {
+      height: 1px;
+      background: #242845;
+      margin: 10px 0;
+    }
+
+    /* Export UI */
+    .textInput {
+      min-width: 260px;
+      background: #0f1220;
+      border: 1px solid #2b3053;
+      color: #f5f6fa;
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+
+    /* Breakdown table */
+    .miniTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .miniTable th,
+    .miniTable td {
+      padding: 8px 10px;
+      border-top: 1px solid #242845;
+      text-align: left;
+    }
+
+    .miniTable th {
+      color: #b8bdd6;
+      font-weight: 650;
+    }
+
+    .right {
+      text-align: right;
+    }
   </style>
 </head>
+
 <body>
   <main class="wrap">
     <div class="card">
@@ -125,30 +289,86 @@
 
           <div class="row" style="margin-top:12px;">
             <div>
-              <div class="muted small">Fuel scored (count)</div>
+              <div class="muted small">Fuel shot (count)</div>
               <div class="big mono" id="fuelCount">0</div>
               <div class="muted small" style="margin-top:6px;">Fuel points earned</div>
               <div class="big mono" id="fuelPts">0</div>
             </div>
 
             <div class="controls" aria-label="Fuel controls">
-              <button class="btn" id="fuelPlus1" aria-label="Increase fuel scored by 1">+1</button>
-              <button class="btn" id="fuelPlus5" aria-label="Increase fuel scored by 5">+5</button>
-              <button class="btn" id="fuelPlus10" aria-label="Increase fuel scored by 10">+10</button>
+              <button class="btn" id="fuelPlus1" aria-label="Increase fuel by 1">+1</button>
+              <button class="btn" id="fuelPlus5" aria-label="Increase fuel by 5">+5</button>
+              <button class="btn" id="fuelPlus10" aria-label="Increase fuel by 10">+10</button>
 
-            <span class="break" aria-hidden="true"></span>
+              <span class="break" aria-hidden="true"></span>
 
-            <button class="btn" id="fuelMinus1" aria-label="Decrease fuel scored by 1">–1</button>
-              <button class="btn" id="fuelMinus5" aria-label="Decrease fuel scored by 5">–5</button>
-              <button class="btn" id="fuelMinus10" aria-label="Decrease fuel scored by 10">–10</button>
+              <button class="btn" id="fuelMinus1" aria-label="Decrease fuel by 1">–1</button>
+              <button class="btn" id="fuelMinus5" aria-label="Decrease fuel by 5">–5</button>
+              <button class="btn" id="fuelMinus10" aria-label="Decrease fuel by 10">–10</button>
 
               <button class="btn secondary" id="fuelClear" aria-label="Reset fuel counters">Reset Fuel</button>
             </div>
           </div>
 
           <p class="muted small" style="margin:12px 0 0;">
-            Fuel count always changes. Fuel <em>points</em> only change when your HUB is active for the current phase.
+            Fuel shot always counts. Fuel <em>points</em> only count when your HUB is active for the current phase.
           </p>
+
+          <!-- Breakdown -->
+          <div class="divider"></div>
+          <div class="muted small">Fuel breakdown (shot vs scored)</div>
+          <table class="miniTable" aria-label="Fuel breakdown table">
+            <thead>
+              <tr>
+                <th>Segment</th>
+                <th class="right">Shot</th>
+                <th class="right">Scored</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tr>
+              <td>AUTO</td>
+              <td class="right mono" id="autoShot">0</td>
+              <td class="right mono" id="autoScored">0</td>
+            </tr>
+            <tr>
+              <td>TRANSITION</td>
+              <td class="right mono" id="transShot">0</td>
+              <td class="right mono" id="transScored">0</td>
+            </tr>
+            <tr>
+              <td>SHIFT 1</td>
+              <td class="right mono" id="s1Shot">0</td>
+              <td class="right mono" id="s1Scored">0</td>
+            </tr>
+            <tr>
+              <td>SHIFT 2</td>
+              <td class="right mono" id="s2Shot">0</td>
+              <td class="right mono" id="s2Scored">0</td>
+            </tr>
+            <tr>
+              <td>SHIFT 3</td>
+              <td class="right mono" id="s3Shot">0</td>
+              <td class="right mono" id="s3Scored">0</td>
+            </tr>
+            <tr>
+              <td>SHIFT 4</td>
+              <td class="right mono" id="s4Shot">0</td>
+              <td class="right mono" id="s4Scored">0</td>
+            </tr>
+            <tr>
+              <td>END GAME</td>
+              <td class="right mono" id="endShot">0</td>
+              <td class="right mono" id="endScored">0</td>
+            </tr>
+            <tr>
+              <td>TELEOP total</td>
+              <td class="right mono" id="teleShot">0</td>
+              <td class="right mono" id="teleScored">0</td>
+            </tr>
+
+          </table>
         </section>
 
         <!-- CLIMB -->
@@ -198,29 +418,41 @@
         </div>
 
         <div class="muted small" id="note" style="margin-top:10px;"></div>
+
+        <!-- EXPORT -->
+        <div class="divider"></div>
+
+        <div class="row" style="align-items:flex-end;">
+          <div style="flex: 1; min-width: 260px;">
+            <div class="muted small">Match name (optional)</div>
+            <input id="matchName" class="textInput" type="text" placeholder="e.g., Practice 3 / Q12 / Finals 1" />
+          </div>
+
+          <div class="controls">
+            <button class="btn" id="exportBtn" disabled>Export match → Sheets</button>
+          </div>
+        </div>
+
+        <div class="muted small" id="exportStatus" style="margin-top:8px;"></div>
       </section>
     </div>
   </main>
 
   <script>
-    // Match structure (per 2026 manual section 6.4 / 6.4.1):
-    // AUTO: 0:20 -> 0:00 (20s)
-    // TELEOP starts at 2:20 (140s) and counts down:
-    //   TRANSITION SHIFT: 2:20 -> 2:10 (10s)
-    //   SHIFT 1..4: 25s each
-    //   END GAME: 0:30 -> 0:00 (30s)
-    //
-    // HUB active rules:
-    // - Both HUBS active during AUTO, TRANSITION SHIFT, END GAME.
-    // - During SHIFT 1..4 only one HUB active; it alternates each SHIFT.
-    // - Ordering depends on AUTO result; we simulate it with "SHIFT 1: Active/Inactive" for your alliance.
+    /***********************
+     * GOOGLE SHEETS EXPORT
+     ***********************/
+    const SHEETS_WEBAPP_URL = "https://script.google.com/a/macros/littletonrobotics.org/s/AKfycbzs4E58esKOXNkbi97mjATh-5-E_EvwJ-7OlUlhMfbPieSaYl5Y2qqWlm8IDZ5KIRresA/exec";
+    const SHEETS_TOKEN = "6328";
 
+    // Scoring values:
     const SCORE = {
       fuelPointEach: 1,
       auto: { "0": 0, "L1": 15 },
       teleop: { "0": 0, "L1": 10, "L2": 20, "L3": 30 },
     };
 
+    // Match structure:
     const TIMING = {
       autoSeconds: 20,
       teleopSeconds: 140,
@@ -256,6 +488,25 @@
       fuelPlus10: document.getElementById("fuelPlus10"),
       fuelClear: document.getElementById("fuelClear"),
 
+      // breakdown
+      autoShot: document.getElementById("autoShot"),
+      autoScored: document.getElementById("autoScored"),
+      s1Shot: document.getElementById("s1Shot"),
+      s1Scored: document.getElementById("s1Scored"),
+      s2Shot: document.getElementById("s2Shot"),
+      s2Scored: document.getElementById("s2Scored"),
+      s3Shot: document.getElementById("s3Shot"),
+      s3Scored: document.getElementById("s3Scored"),
+      s4Shot: document.getElementById("s4Shot"),
+      s4Scored: document.getElementById("s4Scored"),
+      teleShot: document.getElementById("teleShot"),
+      teleScored: document.getElementById("teleScored"),
+      transShot: document.getElementById("transShot"),
+      transScored: document.getElementById("transScored"),
+      endShot: document.getElementById("endShot"),
+      endScored: document.getElementById("endScored"),
+
+
       // climb/score
       autoClimb: document.getElementById("autoClimb"),
       teleopClimb: document.getElementById("teleopClimb"),
@@ -263,6 +514,11 @@
       totalPts: document.getElementById("totalPts"),
       resetAll: document.getElementById("resetAll"),
       note: document.getElementById("note"),
+
+      // export
+      matchName: document.getElementById("matchName"),
+      exportBtn: document.getElementById("exportBtn"),
+      exportStatus: document.getElementById("exportStatus"),
     };
 
     const STORAGE_KEY = "frc2026_practice_counter_v2_timed";
@@ -280,33 +536,44 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) {
           return {
-            // fuelEvents: array of booleans: true if that fuel scored during an active window (earned points)
+            // fuelEvents: [{earned:boolean, phase:string, shift:number|null, timeLeft:number|null}]
             fuelEvents: [],
             autoClimb: "0",
             teleopClimb: "0",
-
-            // timer
             timeLeft: TIMING.totalSeconds,
             running: false,
-
-            // sim setting: is your HUB active in SHIFT 1?
             shift1ActiveForUs: true,
+            lastMatchName: "",
           };
         }
 
         const s = JSON.parse(raw);
 
-        const fuelEvents = Array.isArray(s.fuelEvents)
-          ? s.fuelEvents.filter(v => typeof v === "boolean").slice(0, 9999)
-          : [];
+        const rawEvents = Array.isArray(s.fuelEvents) ? s.fuelEvents.slice(0, 9999) : [];
+        const normalized = [];
+
+        for (const ev of rawEvents) {
+          // Backwards compat: older saves stored booleans
+          if (typeof ev === "boolean") {
+            normalized.push({ earned: ev, phase: "UNKNOWN", shift: null, timeLeft: null });
+          } else if (ev && typeof ev === "object") {
+            normalized.push({
+              earned: !!ev.earned,
+              phase: typeof ev.phase === "string" ? ev.phase : "UNKNOWN",
+              shift: Number.isFinite(ev.shift) ? ev.shift : null,
+              timeLeft: Number.isFinite(ev.timeLeft) ? ev.timeLeft : null,
+            });
+          }
+        }
 
         return {
-          fuelEvents,
+          fuelEvents: normalized,
           autoClimb: (s.autoClimb in SCORE.auto) ? s.autoClimb : "0",
           teleopClimb: (s.teleopClimb in SCORE.teleop) ? s.teleopClimb : "0",
           timeLeft: Number.isFinite(s.timeLeft) ? clamp(Math.trunc(s.timeLeft), 0, TIMING.totalSeconds) : TIMING.totalSeconds,
           running: !!s.running,
           shift1ActiveForUs: (typeof s.shift1ActiveForUs === "boolean") ? s.shift1ActiveForUs : true,
+          lastMatchName: (typeof s.lastMatchName === "string") ? s.lastMatchName : "",
         };
       } catch {
         return {
@@ -316,6 +583,7 @@
           timeLeft: TIMING.totalSeconds,
           running: false,
           shift1ActiveForUs: true,
+          lastMatchName: "",
         };
       }
     }
@@ -325,6 +593,7 @@
     }
 
     let state = loadState();
+    els.matchName.value = state.lastMatchName || "";
 
     // ---- Phase logic ----
     function getPhaseInfo(timeLeft) {
@@ -341,12 +610,11 @@
         };
       }
 
-      // TELEOP / TRANSITION / SHIFTS / ENDGAME portion
-      const teleopLeft = timeLeft; // 140..0, displayed mm:ss
+      const teleopLeft = timeLeft; // 140..0
       const arenaDisplay = fmtTimeMMSS(teleopLeft);
 
       if (teleopLeft > (TIMING.teleopSeconds - TIMING.transitionSeconds)) {
-        // 140..131 => transition
+        // 140..131 transition
         return {
           phase: "TRANSITION SHIFT",
           arenaDisplay,
@@ -356,7 +624,6 @@
         };
       }
 
-      // Alliance shifts and endgame
       if (teleopLeft <= TIMING.endgameSeconds) {
         return {
           phase: "END GAME",
@@ -367,17 +634,13 @@
         };
       }
 
-      // Determine which shift (SHIFT 1..4)
-      // SHIFT 1: 2:10–1:45 => 130..106 (start at 130, next at 105)
-      // SHIFT 2: 1:45–1:20 => 105..81
-      // SHIFT 3: 1:20–0:55 => 80..56
-      // SHIFT 4: 0:55–0:30 => 55..31
+      // Determine SHIFT 1..4
       let shift = null;
       if (teleopLeft <= 130 && teleopLeft > 105) shift = 1;
       else if (teleopLeft <= 105 && teleopLeft > 80) shift = 2;
       else if (teleopLeft <= 80 && teleopLeft > 55) shift = 3;
       else if (teleopLeft <= 55 && teleopLeft > 30) shift = 4;
-      else shift = 4; // fallback (shouldn't hit)
+      else shift = 4; // fallback
 
       const activeInShift1 = state.shift1ActiveForUs;
       const hubActiveForUs = (shift % 2 === 1) ? activeInShift1 : !activeInShift1;
@@ -392,24 +655,169 @@
     }
 
     // ---- Scoring derived from event history ----
-    function getFuelCount() {
-      return state.fuelEvents.length;
-    }
+    function getFuelCount() { return state.fuelEvents.length; }
 
     function getFuelPoints() {
-      // Each event that happened during active window is worth 1 point
       let pts = 0;
-      for (const earned of state.fuelEvents) if (earned) pts += SCORE.fuelPointEach;
+      for (const ev of state.fuelEvents) if (ev.earned) pts += SCORE.fuelPointEach;
       return pts;
+    }
+
+    function getFuelActiveCount() {
+      let c = 0;
+      for (const ev of state.fuelEvents) if (ev.earned) c++;
+      return c;
+    }
+
+    function getFuelInactiveCount() {
+      let c = 0;
+      for (const ev of state.fuelEvents) if (!ev.earned) c++;
+      return c;
     }
 
     function getClimbPoints() {
       return SCORE.auto[state.autoClimb] + SCORE.teleop[state.teleopClimb];
     }
 
+    // Shot/scored breakdown for AUTO/TELE + SHIFTS
+    function summarizeFuel() {
+      const out = {
+        auto: { shot: 0, scored: 0 },
+        transition: { shot: 0, scored: 0 },
+        endgame: { shot: 0, scored: 0 },
+        tele: { shot: 0, scored: 0 }, // everything except AUTO
+        shifts: {
+          1: { shot: 0, scored: 0 },
+          2: { shot: 0, scored: 0 },
+          3: { shot: 0, scored: 0 },
+          4: { shot: 0, scored: 0 },
+        },
+      };
+
+      for (const ev of state.fuelEvents) {
+        const earned = !!ev.earned;
+
+        // Teleop total = everything except AUTO
+        if (ev.phase !== "AUTO") {
+          out.tele.shot++;
+          if (earned) out.tele.scored++;
+        }
+
+        // Specific buckets
+        if (ev.phase === "AUTO") {
+          out.auto.shot++;
+          if (earned) out.auto.scored++;
+          continue;
+        }
+
+        if (ev.phase === "TRANSITION SHIFT") {
+          out.transition.shot++;
+          if (earned) out.transition.scored++;
+          continue;
+        }
+
+        if (ev.phase === "END GAME") {
+          out.endgame.shot++;
+          if (earned) out.endgame.scored++;
+          continue;
+        }
+
+        // SHIFT 1..4
+        if (typeof ev.shift === "number" && ev.shift >= 1 && ev.shift <= 4) {
+          out.shifts[ev.shift].shot++;
+          if (earned) out.shifts[ev.shift].scored++;
+        }
+      }
+
+      return out;
+    }
+
+
+    // ---- Export ----
+    function setExportUI() {
+      const matchOver = (state.timeLeft === 0);
+      els.exportBtn.disabled = !matchOver;
+
+      if (!matchOver) {
+        // leave status as-is unless you want it cleared constantly
+        return;
+      }
+
+      if (!els.exportStatus.textContent) {
+        els.exportStatus.textContent = "Match ended — ready to export to Google Sheets.";
+      }
+    }
+
+    async function exportToSheetsRow() {
+      if (state.timeLeft !== 0) return;
+
+      let name = (els.matchName.value || "").trim();
+      if (!name) {
+        name = (prompt("Name this match (ex: Practice 3, Q12, etc.)", "") || "").trim();
+      }
+      els.matchName.value = name;
+      state.lastMatchName = name;
+      saveState();
+
+      const fuelCount = getFuelCount();
+      const fuelPts = getFuelPoints();
+      const fuelActive = getFuelActiveCount();
+      const fuelInactive = getFuelInactiveCount();
+      const climbPts = getClimbPoints();
+      const totalPts = fuelPts + climbPts;
+
+      const fuelSum = summarizeFuel();
+
+      // Payload matches your Apps Script HEADERS
+      const payload = {
+        token: SHEETS_TOKEN,
+        match_name: name,
+        shift1_setting: state.shift1ActiveForUs ? "active" : "inactive",
+
+        fuel_in_total: fuelCount,
+        fuel_points: fuelPts,
+        fuel_in_active: fuelActive,
+        fuel_in_inactive: fuelInactive,
+
+        auto_fuel_in: fuelSum.auto.shot,
+        auto_fuel_scored_pts: fuelSum.auto.scored * SCORE.fuelPointEach,
+        tele_fuel_in: fuelSum.tele.shot,
+        tele_fuel_scored_pts: fuelSum.tele.scored * SCORE.fuelPointEach,
+
+        shift1_fuel_in: fuelSum.shifts[1].shot,
+        shift1_fuel_scored: fuelSum.shifts[1].scored,
+        shift2_fuel_in: fuelSum.shifts[2].shot,
+        shift2_fuel_scored: fuelSum.shifts[2].scored,
+        shift3_fuel_in: fuelSum.shifts[3].shot,
+        shift3_fuel_scored: fuelSum.shifts[3].scored,
+        shift4_fuel_in: fuelSum.shifts[4].shot,
+        shift4_fuel_scored: fuelSum.shifts[4].scored,
+        transition_fuel_in: fuelSum.transition.shot,
+        transition_fuel_scored: fuelSum.transition.scored,
+        endgame_fuel_in: fuelSum.endgame.shot,
+        endgame_fuel_scored: fuelSum.endgame.scored,
+
+
+        climb_auto: state.autoClimb,
+        climb_teleop: state.teleopClimb,
+        climb_pts: climbPts,
+        total_pts: totalPts,
+      };
+
+      const url = `${SHEETS_WEBAPP_URL}?${new URLSearchParams(payload).toString()}`;
+
+      els.exportStatus.textContent = "Opening export result in a new tab…";
+
+      const win = window.open(url, "_blank", "noopener");
+      if (win) {
+        els.exportStatus.textContent = "Export opened — read the message in the new tab (ok / bad token / error).";
+      } else {
+        els.exportStatus.textContent = "Popup blocked — allow popups and click Export again.";
+      }
+    }
+
     // ---- Render ----
     function render() {
-      // timer & phase
       const info = getPhaseInfo(state.timeLeft);
 
       els.arenaTime.textContent = info.arenaDisplay;
@@ -424,13 +832,9 @@
       els.scoringNow.textContent = info.hubActiveForUs ? "Yes" : "No";
       els.scoringNow.className = info.hubActiveForUs ? "statusActive" : "statusInactive";
 
-      // controls text
       els.startPause.textContent = state.running ? "Pause" : "Start";
-
-      // settings dropdown
       els.shift1Setting.value = state.shift1ActiveForUs ? "active" : "inactive";
 
-      // counters
       const fuelCount = getFuelCount();
       const fuelPts = getFuelPoints();
       const climbPts = getClimbPoints();
@@ -441,7 +845,27 @@
       els.climbPts.textContent = String(climbPts);
       els.totalPts.textContent = String(total);
 
-      // little note
+      // breakdown table
+      const sum = summarizeFuel();
+      els.transShot.textContent = String(sum.transition.shot);
+      els.transScored.textContent = String(sum.transition.scored);
+
+      els.endShot.textContent = String(sum.endgame.shot);
+      els.endScored.textContent = String(sum.endgame.scored);
+
+      els.autoShot.textContent = String(sum.auto.shot);
+      els.autoScored.textContent = String(sum.auto.scored);
+      els.s1Shot.textContent = String(sum.shifts[1].shot);
+      els.s1Scored.textContent = String(sum.shifts[1].scored);
+      els.s2Shot.textContent = String(sum.shifts[2].shot);
+      els.s2Scored.textContent = String(sum.shifts[2].scored);
+      els.s3Shot.textContent = String(sum.shifts[3].shot);
+      els.s3Scored.textContent = String(sum.shifts[3].scored);
+      els.s4Shot.textContent = String(sum.shifts[4].shot);
+      els.s4Scored.textContent = String(sum.shifts[4].scored);
+      els.teleShot.textContent = String(sum.tele.shot);
+      els.teleScored.textContent = String(sum.tele.scored);
+
       if (info.shift) {
         els.note.textContent = info.hubActiveForUs
           ? `You can score right now (SHIFT ${info.shift}).`
@@ -450,16 +874,23 @@
         els.note.textContent = "";
       }
 
+      setExportUI();
       saveState();
     }
 
     // ---- Fuel events: plus adds events, minus undoes most recent events ----
     function addFuel(n) {
       const info = getPhaseInfo(state.timeLeft);
-      const willScore = !!info.hubActiveForUs; // true if hub active in this phase
+      const willScore = !!info.hubActiveForUs;
+
       for (let i = 0; i < n; i++) {
         if (state.fuelEvents.length >= 9999) break;
-        state.fuelEvents.push(willScore);
+        state.fuelEvents.push({
+          earned: willScore,
+          phase: info.phase,
+          shift: info.shift,          // 1..4 or null
+          timeLeft: state.timeLeft,   // seconds remaining on full match clock
+        });
       }
       render();
     }
@@ -487,6 +918,9 @@
     }
 
     function startTimer() {
+      // Starting a new match clears export status text (but keeps match name)
+      els.exportStatus.textContent = "";
+
       if (state.timeLeft <= 0) state.timeLeft = TIMING.totalSeconds;
       state.running = true;
       lastTickMs = Date.now();
@@ -520,6 +954,7 @@
     els.resetTimer.addEventListener("click", () => {
       stopTimer();
       state.timeLeft = TIMING.totalSeconds;
+      els.exportStatus.textContent = "";
       render();
     });
 
@@ -551,6 +986,15 @@
     els.autoClimb.addEventListener("change", () => { state.autoClimb = els.autoClimb.value; render(); });
     els.teleopClimb.addEventListener("change", () => { state.teleopClimb = els.teleopClimb.value; render(); });
 
+    // match name persistence
+    els.matchName.addEventListener("change", () => {
+      state.lastMatchName = (els.matchName.value || "").trim();
+      saveState();
+    });
+
+    // export
+    els.exportBtn.addEventListener("click", exportToSheetsRow);
+
     // reset all
     els.resetAll.addEventListener("click", () => {
       stopTimer();
@@ -561,7 +1005,10 @@
         timeLeft: TIMING.totalSeconds,
         running: false,
         shift1ActiveForUs: true,
+        lastMatchName: "",
       };
+      els.matchName.value = "";
+      els.exportStatus.textContent = "";
       render();
     });
 
@@ -569,4 +1016,5 @@
     render();
   </script>
 </body>
+
 </html>
