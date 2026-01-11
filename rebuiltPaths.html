@@ -56,7 +56,7 @@
     }
     canvas { width: 100%; height: 100%; display: block; }
     .hint {
-      position: absolute; left: 12px; bottom: 12px;
+      margin-top: 12px;
       background: rgba(10,12,18,0.65);
       border: 1px solid rgba(90,100,150,0.35);
       border-radius: 12px;
@@ -78,6 +78,8 @@
     .kpi .lbl { color: #b8bdd6; font-size: 0.9rem; }
 
     .pointsList input[type="number"] { width: 90px; padding: 8px 10px; border-radius: 10px; }
+
+    input[type="checkbox"] { transform: scale(2); margin: 0; }
 
     /* Segment speed inputs */
     .segSpeed {
@@ -153,10 +155,10 @@
       <h2>Field</h2>
       <div class="canvasWrap" id="canvasWrap">
         <canvas id="field"></canvas>
-        <div class="hint">
-          <div><strong>Click</strong> add point • <strong>Drag</strong> move • <strong>Shift+Click</strong> delete</div>
-          <div class="muted small">Shots (if enabled) are attached to the waypoint you stop at.</div>
-        </div>
+      </div>
+      <div class="hint">
+        <div><strong>Click</strong> add point • <strong>Drag</strong> move • <strong>Shift+Click</strong> delete</div>
+        <div class="muted small">Shots (if enabled) are attached to the waypoint you stop at.</div>
       </div>
     </section>
 
@@ -200,6 +202,7 @@
             <tr>
               <th>Segment</th>
               <th class="num">Speed (ft/s)</th>
+              <th class="num">Curved</th>
               <th class="num">Distance (ft)</th>
               <th class="num">Drive time (s)</th>
               <th class="num">Balls @ end</th>
@@ -215,7 +218,7 @@
 
   <script>
     // Default FIELD boundary from 2026 manual (inches -> feet)
-    const DEFAULT_FIELD_W_FT = 317.7 / 12; // ~26.475
+    const DEFAULT_FIELD_W_FT = 30; // set to 30 ft
     const DEFAULT_FIELD_L_FT = 651.2 / 12; // ~54.267
 
     const STORAGE_KEY = "frc2026_field_mapper_v3_segment_speeds";
@@ -269,12 +272,18 @@
           ? s.segmentSpeeds.map(v => (Number(v) > 0 ? Number(v) : null))
           : [];
 
+        const segmentCurves = Array.isArray(s.segmentCurves)
+          ? s.segmentCurves.map(v => !!v)
+          : [];
+
         // normalize length
         normalizeSegmentSpeeds(points, segmentSpeeds, Number(s.speed) > 0 ? Number(s.speed) : 15);
+        normalizeSegmentCurves(points, segmentCurves, true);
 
         return {
           points,
           segmentSpeeds,
+          segmentCurves,
           speed: Number(s.speed) > 0 ? Number(s.speed) : 15,
           bps: Number(s.bps) > 0 ? Number(s.bps) : 10,
           askShots: !!s.askShots,
@@ -290,6 +299,7 @@
       return {
         points: [],
         segmentSpeeds: [], // one per segment (points.length - 1)
+        segmentCurves: [], // one per segment, true for curved
         speed: 15,
         bps: 10,
         askShots: false,
@@ -319,6 +329,13 @@
       for (let i = 0; i < segmentSpeeds.length; i++) {
         if (!(Number(segmentSpeeds[i]) > 0)) segmentSpeeds[i] = defaultSpeed;
       }
+    }
+
+    // Ensure segmentCurves has exactly points.length-1 entries.
+    function normalizeSegmentCurves(points, segmentCurves, defaultCurve = true) {
+      const need = Math.max(0, points.length - 1);
+      while (segmentCurves.length < need) segmentCurves.push(defaultCurve);
+      while (segmentCurves.length > need) segmentCurves.pop();
     }
 
     // Crisp canvas sizing
@@ -403,7 +420,18 @@
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(state.points[0].xPx, state.points[0].yPx);
-        for (let i = 1; i < state.points.length; i++) ctx.lineTo(state.points[i].xPx, state.points[i].yPx);
+        for (let i = 1; i < state.points.length; i++) {
+          const prev = state.points[i - 1];
+          const cur = state.points[i];
+          const isCurved = state.segmentCurves[i - 1];
+          if (isCurved) {
+            const midX = (prev.xPx + cur.xPx) / 2;
+            const midY = (prev.yPx + cur.yPx) / 2;
+            ctx.quadraticCurveTo(prev.xPx, prev.yPx, midX, midY);
+          } else {
+            ctx.lineTo(cur.xPx, cur.yPx);
+          }
+        }
         ctx.stroke();
       }
 
@@ -437,6 +465,7 @@
       const askShots = els.askShots.checked;
 
       normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
 
       let totalDist = 0, totalDrive = 0, totalShoot = 0;
       const segs = [];
@@ -502,6 +531,19 @@
         });
         speedTd.appendChild(speedInput);
         tr.appendChild(speedTd);
+
+        const curveTd = document.createElement("td");
+        curveTd.className = "num";
+        const curveCheckbox = document.createElement("input");
+        curveCheckbox.type = "checkbox";
+        curveCheckbox.checked = state.segmentCurves[s.i - 1];
+        curveCheckbox.addEventListener("change", () => {
+          state.segmentCurves[s.i - 1] = curveCheckbox.checked;
+          saveState();
+          render();
+        });
+        curveTd.appendChild(curveCheckbox);
+        tr.appendChild(curveTd);
 
         const dist = document.createElement("td"); dist.className = "num"; dist.textContent = fmt(s.distFt, 2); tr.appendChild(dist);
         const dt = document.createElement("td"); dt.className = "num"; dt.textContent = fmt(s.driveT, 2); tr.appendChild(dt);
@@ -569,6 +611,7 @@
             state.points.splice(idx, 1);
             const defaultSpeed = Math.max(0.0001, Number(els.speed.value));
             normalizeSegmentSpeeds(state.points, state.segmentSpeeds, defaultSpeed);
+            normalizeSegmentCurves(state.points, state.segmentCurves, true);
             saveState();
             render();
           });
@@ -593,6 +636,7 @@
       state.fieldW = Number(els.fieldW.value) > 0 ? Number(els.fieldW.value) : DEFAULT_FIELD_W_FT;
 
       normalizeSegmentSpeeds(state.points, state.segmentSpeeds, state.speed);
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
 
       drawBackground();
       drawPath();
@@ -634,6 +678,7 @@
         if (e.shiftKey && idx > 0) {
           state.points.splice(idx, 1);
           normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+          normalizeSegmentCurves(state.points, state.segmentCurves, true);
           render();
           return;
         }
@@ -653,6 +698,7 @@
 
       // Adding a point creates a new segment (if we now have 2+ points)
       normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
 
       render();
     });
@@ -691,12 +737,14 @@
     els.undo.addEventListener("click", () => {
       state.points.pop();
       normalizeSegmentSpeeds(state.points, state.segmentSpeeds, Math.max(0.0001, Number(els.speed.value)));
+      normalizeSegmentCurves(state.points, state.segmentCurves, true);
       render();
     });
 
     els.clear.addEventListener("click", () => {
       state.points = [];
       state.segmentSpeeds = [];
+      state.segmentCurves = [];
       render();
     });
 
